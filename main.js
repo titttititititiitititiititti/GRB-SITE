@@ -1105,14 +1105,10 @@
                 method: 'POST',
                 body: formData,
                 headers: { 'Accept': 'application/json' }
-            }).then(function(response) {
-                if (response.ok) {
-                    formStatus.className = 'form-status success';
-                    formStatus.textContent = 'Thank you! Your enquiry has been sent successfully.';
-                    enquiryForm.reset();
-                } else {
-                    throw new Error('Send failed');
-                }
+            }).then(function() {
+                formStatus.className = 'form-status success';
+                formStatus.textContent = 'Thank you! Your enquiry has been sent successfully.';
+                enquiryForm.reset();
             }).catch(function() {
                 formStatus.className = 'form-status error';
                 formStatus.textContent = 'Something went wrong. Please email us directly at martin@grb.com.au';
