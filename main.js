@@ -1054,47 +1054,73 @@
         });
     });
 
-    // Enquiry form (FormSubmit.co)
-    // First submission triggers activation — let it POST normally.
-    // After activation, AJAX works. We detect activation status via localStorage.
+    // Enquiry form (FormSubmit.co) — always AJAX, never redirects
     var enquiryForm = document.getElementById('enquiry-form');
     var formStatus = document.getElementById('form-status');
+    var lastSubmitTime = 0;
+
     if (enquiryForm) {
-        var formActivated = localStorage.getItem('formsubmit-activated');
+        enquiryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        if (formActivated) {
-            enquiryForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                var btn = enquiryForm.querySelector('.form-submit');
-                btn.disabled = true;
-                btn.querySelector('span').textContent = 'Sending...';
-                formStatus.className = 'form-status';
-                formStatus.textContent = '';
+            // Rate limit: 30 seconds between submissions
+            var now = Date.now();
+            if (now - lastSubmitTime < 30000) {
+                formStatus.className = 'form-status error';
+                formStatus.textContent = 'Please wait before submitting again.';
+                return;
+            }
 
-                var formData = new FormData(enquiryForm);
+            // Client-side validation
+            var nameVal = enquiryForm.querySelector('[name="name"]').value.trim();
+            var emailVal = enquiryForm.querySelector('[name="email"]').value.trim();
+            var messageVal = enquiryForm.querySelector('[name="message"]').value.trim();
 
-                fetch(enquiryForm.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Accept': 'application/json' }
-                }).then(function(response) {
-                    if (response.ok) {
-                        formStatus.className = 'form-status success';
-                        formStatus.textContent = 'Thank you! Your enquiry has been sent successfully.';
-                        enquiryForm.reset();
-                    } else {
-                        throw new Error('Send failed');
-                    }
-                }).catch(function() {
-                    formStatus.className = 'form-status error';
-                    formStatus.textContent = 'Something went wrong. Please try again or email us directly.';
-                }).finally(function() {
-                    btn.disabled = false;
-                    btn.querySelector('span').textContent = 'Send Enquiry';
-                });
+            if (nameVal.length < 2 || nameVal.length > 100) {
+                formStatus.className = 'form-status error';
+                formStatus.textContent = 'Please enter a valid name.';
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal) || emailVal.length > 254) {
+                formStatus.className = 'form-status error';
+                formStatus.textContent = 'Please enter a valid email address.';
+                return;
+            }
+            if (messageVal.length < 10 || messageVal.length > 2000) {
+                formStatus.className = 'form-status error';
+                formStatus.textContent = 'Message must be between 10 and 2000 characters.';
+                return;
+            }
+
+            var btn = enquiryForm.querySelector('.form-submit');
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Sending...';
+            formStatus.className = 'form-status';
+            formStatus.textContent = '';
+            lastSubmitTime = now;
+
+            var formData = new FormData(enquiryForm);
+
+            fetch(enquiryForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            }).then(function(response) {
+                if (response.ok) {
+                    formStatus.className = 'form-status success';
+                    formStatus.textContent = 'Thank you! Your enquiry has been sent successfully.';
+                    enquiryForm.reset();
+                } else {
+                    throw new Error('Send failed');
+                }
+            }).catch(function() {
+                formStatus.className = 'form-status error';
+                formStatus.textContent = 'Something went wrong. Please email us directly at martin@grb.com.au';
+            }).finally(function() {
+                btn.disabled = false;
+                btn.querySelector('span').textContent = 'Send Enquiry';
             });
-        }
-        // If not activated, form submits normally (redirects to FormSubmit activation page)
+        });
     }
 
 })();
