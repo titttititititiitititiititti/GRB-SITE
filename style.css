@@ -614,11 +614,15 @@ a {
     max-width: 600px;
 }
 
+.tech-content-full {
+    max-width: 800px;
+}
+
 .tech-text {
     font-size: 1.05rem;
     line-height: 1.8;
     color: var(--color-text-muted);
-    margin-bottom: 40px;
+    margin-bottom: 24px;
 }
 
 .tech-features {
@@ -653,6 +657,85 @@ a {
     border-radius: 50%;
     flex-shrink: 0;
     box-shadow: 0 0 8px var(--color-accent);
+}
+
+/* MineStar Interactive Buttons */
+.minestar-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 40px;
+    margin-bottom: 24px;
+}
+
+.minestar-btn {
+    padding: 12px 22px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.minestar-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent-glow);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.minestar-btn:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px var(--color-accent-glow), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.minestar-btn:hover::before {
+    opacity: 1;
+}
+
+.minestar-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+    box-shadow: 0 0 25px var(--color-accent-glow-strong), 0 4px 16px rgba(5, 139, 148, 0.3);
+}
+
+.minestar-btn.active::before {
+    opacity: 0;
+}
+
+.minestar-detail {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.minestar-detail:hover {
+    border-color: rgba(5, 139, 148, 0.2);
+    box-shadow: 0 0 20px var(--color-accent-glow);
+}
+
+.minestar-detail p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--color-text-muted);
+    margin: 0;
+    transition: opacity 0.3s;
 }
 
 /* Tech Visual - Animated Rings */

@@ -1119,4 +1119,32 @@
         });
     }
 
+    // ─── MINESTAR INTERACTIVE BUTTONS ─────────────────────────
+    var minestarData = {
+        edge: 'Cloud-based, subscription-managed application platform enabling browser access to the MineStar ecosystem.',
+        fleet: 'Fleet management and production tracking. Manages line-ups, material movement, and payload compliance.',
+        command: 'Autonomous and semi-autonomous machine operation. Includes Command for Hauling, Dozing, and Drilling.',
+        terrain: 'High-precision GNSS guidance for grading, loading, and drilling operations.',
+        detect: 'Safety and proximity awareness solutions.',
+        health: 'Equipment health monitoring and predictive maintenance analytics.'
+    };
+
+    var minestarBtns = document.querySelectorAll('.minestar-btn');
+    var minestarDesc = document.getElementById('minestar-desc');
+
+    if (minestarBtns.length && minestarDesc) {
+        minestarBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                minestarBtns.forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                var key = btn.getAttribute('data-target');
+                minestarDesc.style.opacity = '0';
+                setTimeout(function() {
+                    minestarDesc.textContent = minestarData[key] || '';
+                    minestarDesc.style.opacity = '1';
+                }, 200);
+            });
+        });
+    }
+
 })();
