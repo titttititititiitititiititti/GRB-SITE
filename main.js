@@ -735,7 +735,7 @@
     // Position excavator (facing camera, front-quarter view, larger)
     truck.scale.setScalar(0.42);
     truck.position.set(1.5, -2.0, 0);
-    truck.rotation.y = Math.PI + 3.67;
+    truck.rotation.y = Math.PI + 3.67 + Math.PI;
     scene.add(truck);
 
     // === Wireframe geometry floating around ===
@@ -805,7 +805,7 @@
     camera.lookAt(0, 0.8, 0);
 
     // ─── Scroll-Driven Camera + Truck Rotation ─────────────────
-    let targetRotY = Math.PI + 3.67;
+    let targetRotY = Math.PI + 3.67 + Math.PI;
     let targetRotX = 0;
     let targetCamY = 2.5;
     let targetCamX = 4;
@@ -818,7 +818,7 @@
         scrub: true,
         onUpdate: (self) => {
             const p = self.progress;
-            targetRotY = Math.PI + 3.67 + (p * Math.PI * 0.85);
+            targetRotY = Math.PI + 3.67 + Math.PI + (p * Math.PI * 0.85);
             targetRotX = Math.sin(p * Math.PI) * 0.04;
             targetCamY = 2.5 - p * 1.0;
             targetCamX = 4 + p * 0.5;
