@@ -1140,6 +1140,76 @@
         });
     }
 
+    // ─── FACILITY TIMELINE SCROLL ANIMATION ──────────────────
+    var processTimeline = document.querySelector('.process-timeline');
+    if (processTimeline) {
+        var timelineSteps = processTimeline.querySelectorAll('.timeline-step');
+        var timelineObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    processTimeline.classList.add('active');
+                    timelineSteps.forEach(function(step, i) {
+                        setTimeout(function() {
+                            step.classList.add('lit');
+                        }, 400 + i * 500);
+                    });
+                    timelineObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.4 });
+        timelineObserver.observe(processTimeline);
+    }
+
+    // ─── TRANSPORT TABS ──────────────────────────────────────
+    var transportData = {
+        staging: 'A fully monitored yard with 24/7 CCTV for approved heavy equipment movements.',
+        rest: 'A safe and convenient parking area for heavy transport drivers and support crews.',
+        route: 'A strategic location helping streamline oversized machinery movement across the region.'
+    };
+
+    var transportTabs = document.querySelectorAll('.transport-tab');
+    var transportDesc = document.getElementById('transport-desc');
+
+    if (transportTabs.length && transportDesc) {
+        transportTabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                transportTabs.forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                var key = tab.getAttribute('data-tab');
+                transportDesc.style.opacity = '0';
+                setTimeout(function() {
+                    transportDesc.textContent = transportData[key] || '';
+                    transportDesc.style.opacity = '1';
+                }, 200);
+            });
+        });
+    }
+
+    // ─── FACILITY STAT COUNTERS ──────────────────────────────
+    var facilityStats = document.querySelectorAll('.facility-stat-number');
+    if (facilityStats.length) {
+        var statsObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    var el = entry.target;
+                    var target = parseInt(el.getAttribute('data-target'));
+                    var duration = 1800;
+                    var start = performance.now();
+                    function tick(now) {
+                        var progress = Math.min((now - start) / duration, 1);
+                        var eased = 1 - Math.pow(1 - progress, 3);
+                        el.textContent = Math.floor(eased * target);
+                        if (progress < 1) requestAnimationFrame(tick);
+                        else el.textContent = target;
+                    }
+                    requestAnimationFrame(tick);
+                    statsObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+        facilityStats.forEach(function(s) { statsObserver.observe(s); });
+    }
+
     // ─── MINESTAR INTERACTIVE BUTTONS ─────────────────────────
     var minestarData = {
         edge: 'Cloud-based, subscription-managed application platform enabling browser access to the MineStar ecosystem.',
