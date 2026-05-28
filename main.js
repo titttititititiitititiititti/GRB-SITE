@@ -324,7 +324,7 @@
         });
     });
 
-    // ─── Three.js — Big Mining Haul Truck (CAT 797 Style) ──────
+    // ─── Three.js — Liebherr 9800 Excavator ──────
     const heroContainer = document.getElementById('hero-canvas-container');
     const scene = new THREE.Scene();
 
@@ -337,12 +337,12 @@
     renderer.shadowMap.type = THREE.PCFShadowMap;
     heroContainer.appendChild(renderer.domElement);
 
-    // Lighting — warm key to pop yellow, teal rim for brand accent
-    const hemiLight = new THREE.HemisphereLight(0xffefca, 0x1a1a2e, 1.2);
+    // Lighting — cool key for white body, teal rim for brand accent
+    const hemiLight = new THREE.HemisphereLight(0xe8f0ff, 0x1a1a2e, 1.4);
     scene.add(hemiLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffd28a, 2.5);
-    keyLight.position.set(-5.5, 8.5, -5.5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    keyLight.position.set(5.5, 9, -4);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 1024;
     keyLight.shadow.mapSize.height = 1024;
@@ -364,19 +364,20 @@
     underGlow.position.set(0, -0.5, 0);
     scene.add(underGlow);
 
-    // Materials — Komatsu 830E style mining haul truck
+    // Materials — Liebherr 9800 excavator (white body, dark undercarriage)
     const mats = {
-        yellow: new THREE.MeshStandardMaterial({ color: 0xd4940f, roughness: 0.68, metalness: 0.15, flatShading: true, side: THREE.DoubleSide }),
-        yellowLight: new THREE.MeshStandardMaterial({ color: 0xeaaa1a, roughness: 0.62, metalness: 0.1, flatShading: true }),
-        yellowDark: new THREE.MeshStandardMaterial({ color: 0x8a5808, roughness: 0.78, metalness: 0.12, flatShading: true }),
+        white: new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.55, metalness: 0.1, flatShading: true, side: THREE.DoubleSide }),
+        whiteDark: new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.65, metalness: 0.12, flatShading: true }),
         black: new THREE.MeshStandardMaterial({ color: 0x121214, roughness: 0.92, metalness: 0.04, flatShading: true }),
         darkMetal: new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.7, metalness: 0.4, flatShading: true }),
-        tyre: new THREE.MeshStandardMaterial({ color: 0x0e0e10, roughness: 0.97, metalness: 0.01, flatShading: true }),
-        tyreSide: new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.92, metalness: 0.02, flatShading: true }),
-        rim: new THREE.MeshStandardMaterial({ color: 0xd89413, roughness: 0.5, metalness: 0.35, flatShading: true }),
+        trackPad: new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.95, metalness: 0.05, flatShading: true }),
+        trackFrame: new THREE.MeshStandardMaterial({ color: 0x3a3a40, roughness: 0.7, metalness: 0.35, flatShading: true }),
+        hydraulic: new THREE.MeshStandardMaterial({ color: 0x4a4a52, roughness: 0.5, metalness: 0.5, flatShading: true }),
         glass: new THREE.MeshStandardMaterial({ color: 0x058B94, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.7, flatShading: true, emissive: 0x058B94, emissiveIntensity: 0.1 }),
         light: new THREE.MeshStandardMaterial({ color: 0xffeebb, emissive: 0xffcc55, emissiveIntensity: 0.6, roughness: 0.35, flatShading: true }),
         accent: new THREE.MeshStandardMaterial({ color: 0x058B94, metalness: 0.6, roughness: 0.25, emissive: 0x058B94, emissiveIntensity: 0.25, flatShading: true }),
+        yellow: new THREE.MeshStandardMaterial({ color: 0xd4940f, roughness: 0.68, metalness: 0.15, flatShading: true }),
+        counterweight: new THREE.MeshStandardMaterial({ color: 0x3d3d42, roughness: 0.8, metalness: 0.3, flatShading: true }),
     };
 
     const truck = new THREE.Group();
@@ -403,296 +404,159 @@
         mesh.rotation.set(r[0],r[1],r[2]);
         return addM(mesh, g);
     }
-    function panel(verts, mat) {
-        var geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
-        geo.computeVertexNormals();
-        return addM(new THREE.Mesh(geo, mat));
-    }
-    function tri(a, b, c, arr) { arr.push(a[0],a[1],a[2], b[0],b[1],b[2], c[0],c[1],c[2]); }
-    function quad(a, b, c, d, arr) { tri(a,b,c,arr); tri(a,c,d,arr); }
 
-    // === MASSIVE WHEELS (the defining feature — nearly half the truck height) ===
-    function makeWheel(x, z, r, w, detail) {
-        r = r || 1.6; w = w || 1.1;
-        if (detail === undefined) detail = true;
-        var g = new THREE.Group();
-        g.position.set(x, r + 0.08, z);
-        g.rotation.x = Math.PI / 2;
-        truck.add(g);
-        wheelGroups.push(g);
-
-        // Main tyre
-        var tyre = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 20), mats.tyre);
-        tyre.castShadow = true; g.add(tyre);
-        // Sidewall
-        var sw = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.82, r * 0.82, w + 0.02, 20), mats.tyreSide);
-        g.add(sw);
-        // Rim
-        var rm = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.45, r * 0.45, w + 0.06, 14), mats.rim);
-        rm.castShadow = true; g.add(rm);
-        // Hub
-        var hub = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.22, r * 0.22, w + 0.08, 10), mats.yellowDark);
-        g.add(hub);
-
-        if (detail) {
-            // Tread blocks
-            for (var i = 0; i < 20; i++) {
-                var a = (i / 20) * Math.PI * 2;
-                var lug = new THREE.Mesh(new THREE.BoxGeometry(r * 0.22, w * 1.02, r * 0.14), mats.tyreSide);
-                lug.position.set(Math.cos(a) * r * 0.94, 0, Math.sin(a) * r * 0.94);
-                lug.rotation.y = -a;
-                lug.castShadow = true; g.add(lug);
-            }
-            // Bolts
-            for (var b = 0; b < 12; b++) {
-                var ba = (b / 12) * Math.PI * 2;
-                var bolt = new THREE.Mesh(new THREE.BoxGeometry(r * 0.05, w + 0.1, r * 0.05), mats.yellowDark);
-                bolt.position.set(Math.cos(ba) * r * 0.35, 0, Math.sin(ba) * r * 0.35);
-                g.add(bolt);
-            }
+    // === TRACK UNDERCARRIAGE (two crawler units) ===
+    function makeTrack(zOff) {
+        var tLen = 7.0, tH = 1.4, tW = 1.3;
+        // Track frame
+        bx([tLen, tH * 0.5, tW], [0, tH * 0.35, zOff], mats.trackFrame);
+        // Track pads (top and bottom runs)
+        for (var tp = 0; tp < 14; tp++) {
+            var tx = -tLen / 2 + 0.25 + tp * (tLen - 0.5) / 13;
+            bx([0.35, 0.12, tW + 0.1], [tx, 0.05, zOff], mats.trackPad);
+            bx([0.35, 0.08, tW + 0.05], [tx, tH * 0.65, zOff], mats.trackPad);
         }
-        return g;
+        // Sprocket (front)
+        cy(0.65, 0.65, tW * 0.6, [-tLen / 2 + 0.3, tH * 0.35, zOff], mats.darkMetal, [Math.PI / 2, 0, 0], 10);
+        // Idler (rear)
+        cy(0.55, 0.55, tW * 0.5, [tLen / 2 - 0.3, tH * 0.35, zOff], mats.darkMetal, [Math.PI / 2, 0, 0], 10);
+        // Rollers
+        for (var rl = 0; rl < 5; rl++) {
+            var rlx = -2.2 + rl * 1.1;
+            cy(0.2, 0.2, tW * 0.4, [rlx, 0.12, zOff], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
+        }
+        // Track guards (side plates)
+        bx([tLen * 0.9, tH * 0.7, 0.08], [0, tH * 0.4, zOff - tW / 2 - 0.04], mats.trackFrame);
+        bx([tLen * 0.9, tH * 0.7, 0.08], [0, tH * 0.4, zOff + tW / 2 + 0.04], mats.trackFrame);
+    }
+    makeTrack(-2.8);
+    makeTrack(2.8);
+
+    // Track cross-frame connecting both crawlers
+    bx([4.0, 0.6, 4.4], [0, 1.3, 0], mats.darkMetal);
+
+    // === TURNTABLE / SLEW RING ===
+    cy(1.8, 1.8, 0.3, [0, 1.8, 0], mats.darkMetal, [0, 0, 0], 16);
+
+    // === MAIN SUPERSTRUCTURE (house body — Liebherr white) ===
+    bx([5.5, 2.8, 4.6], [0, 3.4, 0], mats.white);
+    // Engine deck (raised rear section)
+    bx([2.8, 1.2, 4.4], [-1.8, 5.4, 0], mats.white);
+    // Engine deck top panels
+    bx([2.6, 0.1, 4.2], [-1.8, 6.0, 0], mats.whiteDark);
+    // Side panels with detail lines
+    bx([5.3, 0.08, 0.06], [0, 3.8, -2.35], mats.whiteDark);
+    bx([5.3, 0.08, 0.06], [0, 3.8, 2.35], mats.whiteDark);
+    bx([5.3, 0.08, 0.06], [0, 3.0, -2.35], mats.whiteDark);
+    bx([5.3, 0.08, 0.06], [0, 3.0, 2.35], mats.whiteDark);
+
+    // Exhaust stacks
+    cy(0.12, 0.14, 1.5, [-2.5, 6.5, 1.2], mats.darkMetal, [0, 0, 0], 8);
+    cy(0.12, 0.14, 1.5, [-2.5, 6.5, -1.2], mats.darkMetal, [0, 0, 0], 8);
+    cy(0.16, 0.16, 0.1, [-2.5, 7.3, 1.2], mats.accent, [0, 0, 0], 8);
+    cy(0.16, 0.16, 0.1, [-2.5, 7.3, -1.2], mats.accent, [0, 0, 0], 8);
+
+    // Radiator / grille on side
+    for (var gi = 0; gi < 6; gi++) {
+        bx([0.06, 0.12, 3.8], [-2.8 + gi * 0.18, 5.0 + gi * 0.12, 0], mats.darkMetal);
     }
 
-    // Front wheels (smaller)
-    makeWheel(-3.8, -1.9, 1.45, 0.95, true);
-    makeWheel(-3.8, 1.9, 1.45, 0.95, true);
-    // Rear wheels (massive dual)
-    makeWheel(2.6, -2.1, 1.7, 1.1, true);
-    makeWheel(2.6, 2.1, 1.7, 1.1, true);
-
-    // === CHASSIS — heavy frame sitting high above ground ===
-    bx([8.5, 0.5, 3.2], [0, 2.6, 0], mats.black);
-    bx([7.0, 0.3, 2.6], [0.5, 2.95, 0], mats.darkMetal);
-
-    // === FRONT ENGINE / RADIATOR (tall, imposing front face like the 830E) ===
-    bx([2.4, 2.8, 3.4], [-3.0, 4.3, 0], mats.yellow);
-    // Radiator grille
-    bx([0.15, 2.2, 2.8], [-4.25, 4.0, 0], mats.black);
-    // Grille horizontal slats
-    for (var si = 0; si < 8; si++) {
-        bx([0.18, 0.08, 2.6], [-4.3, 3.1 + si * 0.28, 0], mats.darkMetal);
+    // === COUNTERWEIGHT (massive rear block) ===
+    bx([1.8, 2.2, 4.8], [-3.6, 3.2, 0], mats.counterweight);
+    bx([1.4, 0.6, 4.6], [-3.6, 4.5, 0], mats.counterweight);
+    // Counterweight ribs
+    for (var cwi = 0; cwi < 4; cwi++) {
+        bx([1.7, 0.1, 0.12], [-3.6, 2.4 + cwi * 0.6, -2.0], mats.darkMetal);
+        bx([1.7, 0.1, 0.12], [-3.6, 2.4 + cwi * 0.6, 2.0], mats.darkMetal);
     }
-    // Bumper
-    bx([0.4, 0.4, 3.8], [-4.5, 2.7, 0], mats.yellowDark);
-    // Lower guard bar
-    bx([0.2, 0.15, 4.2], [-4.7, 2.35, 0], mats.accent);
 
-    // === CAB (tall box on front-left like the reference) ===
-    bx([1.6, 2.0, 1.6], [-2.2, 5.9, -1.2], mats.yellow);
+    // === CAB (front-left, elevated with large windows) ===
+    bx([1.8, 2.0, 1.8], [2.8, 5.5, -1.6], mats.white);
     // Cab roof
-    bx([1.8, 0.2, 1.8], [-2.2, 7.0, -1.2], mats.yellowDark);
+    bx([2.0, 0.15, 2.0], [2.8, 6.6, -1.6], mats.whiteDark);
     // Front windscreen
-    bx([0.06, 1.3, 1.2], [-3.05, 6.1, -1.2], mats.glass);
-    // Side windows
-    bx([1.1, 1.2, 0.06], [-2.2, 6.1, -2.05], mats.glass);
-    bx([0.8, 1.0, 0.06], [-1.6, 6.1, -2.05], mats.glass);
-    // Cab base / platform
-    bx([2.0, 0.15, 2.0], [-2.2, 4.82, -1.2], mats.yellowDark);
+    bx([0.06, 1.5, 1.5], [3.75, 5.6, -1.6], mats.glass);
+    // Side window
+    bx([1.4, 1.4, 0.06], [2.8, 5.6, -2.55], mats.glass);
+    // Rear window
+    bx([0.06, 1.0, 1.3], [1.85, 5.6, -1.6], mats.glass);
+    // Top window (skylight)
+    bx([1.3, 0.06, 1.3], [2.8, 6.45, -1.6], mats.glass);
+    // Cab FOPS frame
+    bx([0.08, 2.1, 0.08], [3.7, 5.5, -2.5], mats.darkMetal);
+    bx([0.08, 2.1, 0.08], [3.7, 5.5, -0.7], mats.darkMetal);
+    bx([0.08, 2.1, 0.08], [1.9, 5.5, -2.5], mats.darkMetal);
 
-    // === DUMP BED — massive V-shaped tray (the dominant feature) ===
-    var bedV = [];
-    var bL = 8.5;   // length (increased)
-    var bBw = 2.2;  // bottom half-width
-    var bTw = 3.5;  // top half-width (wider flare)
-    var bH = 3.8;   // height (taller)
-    var bY0 = 3.1;  // bottom Y
-    var bY1 = bY0 + bH; // top Y
-    var bX0 = -0.8; // front X
-    var bX1 = bX0 + bL; // back X
+    // === BOOM (massive main arm — extends forward and up) ===
+    var boomW = 0.9, boomH = 1.4;
+    // Boom base section (angled upward from body)
+    bx([4.5, boomH, boomW], [4.2, 5.8, 0], mats.white, [-0.25, 0, 0.15]);
+    // Boom upper section
+    bx([3.8, boomH * 0.85, boomW * 0.85], [7.2, 5.0, 0.2], mats.white, [0.1, 0, -0.08]);
+    // Boom structural webbing
+    bx([4.2, 0.08, boomW - 0.15], [4.2, 5.8, 0], mats.whiteDark, [-0.25, 0, 0.15]);
 
-    var BFL = [bX0, bY0, -bBw], BFR = [bX0, bY0, bBw];
-    var BBL = [bX1, bY0 - 0.1, -bBw * 0.9], BBR = [bX1, bY0 - 0.1, bBw * 0.9];
-    var TFL = [bX0 - 0.5, bY1, -bTw], TFR = [bX0 - 0.5, bY1, bTw];
-    var TBL = [bX1 + 0.4, bY1 - 0.4, -bTw * 0.82], TBR = [bX1 + 0.4, bY1 - 0.4, bTw * 0.82];
+    // Boom pivot pins
+    cy(0.25, 0.25, 1.6, [2.2, 4.8, 0], mats.darkMetal, [Math.PI / 2, 0, 0], 10);
 
-    // All walls + floor
-    quad(BFL, BBL, TBL, TFL, bedV);
-    quad(BBR, BFR, TFR, TBR, bedV);
-    quad(BBL, BBR, TBR, TBL, bedV);
-    quad(BFR, BFL, TFL, TFR, bedV);
-    quad(BFL, BFR, BBR, BBL, bedV);
-    panel(bedV, mats.yellow);
+    // === STICK / DIPPER ARM ===
+    bx([4.0, 0.8, 0.7], [9.5, 3.5, 0.2], mats.white, [0.4, 0, 0.1]);
+    bx([3.8, 0.06, 0.5], [9.5, 3.5, 0.2], mats.whiteDark, [0.4, 0, 0.1]);
+    // Stick-to-boom pivot
+    cy(0.2, 0.2, 1.2, [8.6, 4.5, 0.2], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
 
-    // Inner shadow (dark floor inside tray)
-    var innerV = [];
-    quad(
-        [bX0 + 0.3, bY1 - 0.3, -bTw + 0.4],
-        [bX1 - 0.3, bY1 - 0.6, -bTw * 0.7],
-        [bX1 - 0.3, bY1 - 0.6, bTw * 0.7],
-        [bX0 + 0.3, bY1 - 0.3, bTw - 0.4],
-        innerV
-    );
-    panel(innerV, mats.black);
+    // === BUCKET (large face-shovel style) ===
+    var bktW = 2.8, bktH = 2.0, bktD = 1.6;
+    bx([bktD, bktH, bktW], [11.5, 1.8, 0.2], mats.white, [0.3, 0, 0.15]);
+    // Bucket floor
+    bx([bktD + 0.2, 0.12, bktW], [11.5, 0.7, 0.2], mats.darkMetal, [0.3, 0, 0.15]);
+    // Bucket teeth
+    for (var bt = 0; bt < 5; bt++) {
+        var btz = -1.1 + bt * 0.56;
+        bx([0.35, 0.25, 0.18], [12.6, 0.4, btz + 0.2], mats.darkMetal, [0.3, 0, 0.2]);
+    }
+    // Bucket lip
+    bx([0.15, bktH * 0.9, bktW + 0.1], [12.35, 1.8, 0.2], mats.darkMetal, [0.3, 0, 0.15]);
 
-    // Top lip / heavy rail — custom geometry following exact tray edge vertices
-    var lipH = 0.22;
-    var lipW = 0.16;
-    var lipVerts = [];
-    // Left side rail: TFL to TBL (top face + outer face)
-    var LF_i = [TFL[0], TFL[1], TFL[2] + lipW];
-    var LF_o = [TFL[0], TFL[1], TFL[2] - lipW];
-    var LF_it = [TFL[0], TFL[1] + lipH, TFL[2] + lipW];
-    var LF_ot = [TFL[0], TFL[1] + lipH, TFL[2] - lipW];
-    var LB_i = [TBL[0], TBL[1], TBL[2] + lipW];
-    var LB_o = [TBL[0], TBL[1], TBL[2] - lipW];
-    var LB_it = [TBL[0], TBL[1] + lipH, TBL[2] + lipW];
-    var LB_ot = [TBL[0], TBL[1] + lipH, TBL[2] - lipW];
-    quad(LF_ot, LB_ot, LB_it, LF_it, lipVerts); // top
-    quad(LF_o, LB_o, LB_ot, LF_ot, lipVerts);   // outer face
-    quad(LB_i, LF_i, LF_it, LB_it, lipVerts);   // inner face
-    quad(LF_it, LB_it, LB_ot, LF_ot, lipVerts); // top redundant removed
-    // Right side rail: TFR to TBR
-    var RF_i = [TFR[0], TFR[1], TFR[2] - lipW];
-    var RF_o = [TFR[0], TFR[1], TFR[2] + lipW];
-    var RF_it = [TFR[0], TFR[1] + lipH, TFR[2] - lipW];
-    var RF_ot = [TFR[0], TFR[1] + lipH, TFR[2] + lipW];
-    var RB_i = [TBR[0], TBR[1], TBR[2] - lipW];
-    var RB_o = [TBR[0], TBR[1], TBR[2] + lipW];
-    var RB_it = [TBR[0], TBR[1] + lipH, TBR[2] - lipW];
-    var RB_ot = [TBR[0], TBR[1] + lipH, TBR[2] + lipW];
-    quad(RF_it, RB_it, RB_ot, RF_ot, lipVerts); // top
-    quad(RF_ot, RB_ot, RB_o, RF_o, lipVerts);   // outer face
-    quad(RF_i, RB_i, RB_it, RF_it, lipVerts);   // inner face
-    // Front cross-bar: TFL to TFR
-    var FF_l = [TFL[0], TFL[1], TFL[2]];
-    var FF_r = [TFR[0], TFR[1], TFR[2]];
-    var FF_lt = [TFL[0], TFL[1] + lipH, TFL[2]];
-    var FF_rt = [TFR[0], TFR[1] + lipH, TFR[2]];
-    var FF_lb = [TFL[0] + lipW, TFL[1], TFL[2]];
-    var FF_rb = [TFR[0] + lipW, TFR[1], TFR[2]];
-    var FF_lbt = [TFL[0] + lipW, TFL[1] + lipH, TFL[2]];
-    var FF_rbt = [TFR[0] + lipW, TFR[1] + lipH, TFR[2]];
-    quad(FF_lt, FF_rt, FF_rbt, FF_lbt, lipVerts); // top
-    quad(FF_l, FF_r, FF_rt, FF_lt, lipVerts);     // front face
-    // Rear cross-bar: TBL to TBR
-    var RR_l = [TBL[0], TBL[1], TBL[2]];
-    var RR_r = [TBR[0], TBR[1], TBR[2]];
-    var RR_lt = [TBL[0], TBL[1] + lipH, TBL[2]];
-    var RR_rt = [TBR[0], TBR[1] + lipH, TBR[2]];
-    var RR_lb = [TBL[0] - lipW, TBL[1], TBL[2]];
-    var RR_rb = [TBR[0] - lipW, TBR[1], TBR[2]];
-    var RR_lbt = [TBL[0] - lipW, TBL[1] + lipH, TBL[2]];
-    var RR_rbt = [TBR[0] - lipW, TBR[1] + lipH, TBR[2]];
-    quad(RR_lbt, RR_rbt, RR_rt, RR_lt, lipVerts); // top
-    quad(RR_lt, RR_rt, RR_r, RR_l, lipVerts);     // rear face
-    panel(lipVerts, mats.yellowDark);
+    // === HYDRAULIC CYLINDERS ===
+    // Boom cylinders (pair)
+    cy(0.18, 0.14, 3.5, [3.5, 6.8, -1.2], mats.hydraulic, [0, 0, 0.5], 8);
+    cy(0.18, 0.14, 3.5, [3.5, 6.8, 1.2], mats.hydraulic, [0, 0, 0.5], 8);
+    // Boom cylinder rods
+    cy(0.09, 0.09, 2.0, [5.0, 7.3, -1.2], mats.accent, [0, 0, 0.4], 8);
+    cy(0.09, 0.09, 2.0, [5.0, 7.3, 1.2], mats.accent, [0, 0, 0.4], 8);
+    // Stick cylinder
+    cy(0.15, 0.12, 3.0, [7.0, 6.0, 0], mats.hydraulic, [0, 0, -0.3], 8);
+    cy(0.07, 0.07, 1.8, [8.2, 5.5, 0], mats.accent, [0, 0, -0.35], 8);
+    // Bucket cylinder
+    cy(0.12, 0.1, 2.2, [9.8, 4.2, 0.6], mats.hydraulic, [0, 0, 0.25], 8);
 
-    // Vertical ribs on tray sides (structural stiffeners)
-    for (var ri = 0; ri < 6; ri++) {
-        var rx = bX0 + 0.8 + ri * (bL - 1.2) / 5;
-        bx([0.14, bH * 0.7, 0.12], [rx, bY0 + bH * 0.45, -bTw * 0.72], mats.yellowDark, [0, 0, -0.1]);
-        bx([0.14, bH * 0.7, 0.12], [rx, bY0 + bH * 0.45, bTw * 0.72], mats.yellowDark, [0, 0, -0.1]);
+    // === PLATFORM / WALKWAYS ===
+    bx([5.8, 0.1, 5.2], [0, 2.0, 0], mats.whiteDark);
+    // Railings
+    bx([5.6, 0.06, 0.06], [0, 2.8, -2.65], mats.darkMetal);
+    bx([5.6, 0.06, 0.06], [0, 2.8, 2.65], mats.darkMetal);
+    bx([0.06, 0.06, 5.3], [-2.8, 2.8, 0], mats.darkMetal);
+    for (var rli = 0; rli < 8; rli++) {
+        bx([0.06, 0.7, 0.06], [-2.7 + rli * 0.8, 2.4, -2.65], mats.darkMetal);
+        bx([0.06, 0.7, 0.06], [-2.7 + rli * 0.8, 2.4, 2.65], mats.darkMetal);
     }
 
-    // Horizontal stiffener band mid-height on tray
-    bx([bL * 0.85, 0.15, 0.1], [bX0 + bL * 0.48, bY0 + bH * 0.45, -bTw * 0.74], mats.yellowDark);
-    bx([bL * 0.85, 0.15, 0.1], [bX0 + bL * 0.48, bY0 + bH * 0.45, bTw * 0.74], mats.yellowDark);
-
-    // === FRONT PLATFORMS / WALKWAYS (like 830E reference) ===
-    // Lower platform (mid-height landing around the radiator area)
-    bx([3.0, 0.12, 4.2], [-3.5, 3.5, 0], mats.yellowDark);
-    // Upper platform (cab level, full width)
-    bx([3.2, 0.12, 4.4], [-3.3, 4.85, 0], mats.yellowDark);
-    // Platform extension on far side
-    bx([1.5, 0.12, 0.8], [-4.0, 4.85, 2.6], mats.yellowDark);
-    bx([1.5, 0.12, 0.8], [-4.0, 3.5, 2.6], mats.yellowDark);
-
-    // Staircases removed — repositioned to rear of truck (behind cab, clear of wheels)
-    // Ladder on near side (vertical, attached to platform edge, clear of wheels)
-    var ladderZ = -2.4;
-    var ladderX = -2.0;
-    for (var li = 0; li < 8; li++) {
-        var ly = 1.8 + li * 0.4;
-        bx([0.06, 0.06, 0.45], [ladderX, ly, ladderZ], mats.darkMetal);
+    // === LADDER (access to cab) ===
+    for (var lai = 0; lai < 6; lai++) {
+        bx([0.06, 0.06, 0.5], [3.8, 2.2 + lai * 0.55, -2.6], mats.darkMetal);
     }
-    bx([0.06, 2.8, 0.06], [ladderX, 2.9, ladderZ - 0.2], mats.darkMetal);
-    bx([0.06, 2.8, 0.06], [ladderX, 2.9, ladderZ + 0.2], mats.darkMetal);
-
-    // === SAFETY RAILINGS around platforms ===
-    // Upper platform - near side railing
-    bx([3.4, 0.06, 0.06], [-3.3, 5.75, -2.5], mats.darkMetal);
-    bx([3.4, 0.06, 0.06], [-3.3, 5.35, -2.5], mats.darkMetal);
-    for (var upi = 0; upi < 6; upi++) {
-        bx([0.06, 0.9, 0.06], [-4.8 + upi * 0.68, 5.3, -2.5], mats.darkMetal);
-    }
-    // Upper platform - far side railing
-    bx([3.4, 0.06, 0.06], [-3.3, 5.75, 2.5], mats.darkMetal);
-    bx([3.4, 0.06, 0.06], [-3.3, 5.35, 2.5], mats.darkMetal);
-    for (var upi2 = 0; upi2 < 6; upi2++) {
-        bx([0.06, 0.9, 0.06], [-4.8 + upi2 * 0.68, 5.3, 2.5], mats.darkMetal);
-    }
-    // Upper platform - front railing
-    bx([0.06, 0.06, 5.0], [-4.9, 5.75, 0], mats.darkMetal);
-    bx([0.06, 0.06, 5.0], [-4.9, 5.35, 0], mats.darkMetal);
-
-    // Lower platform - near side railing
-    bx([3.2, 0.06, 0.06], [-3.5, 4.35, -2.4], mats.darkMetal);
-    bx([3.2, 0.06, 0.06], [-3.5, 4.0, -2.4], mats.darkMetal);
-    for (var lpi = 0; lpi < 5; lpi++) {
-        bx([0.06, 0.8, 0.06], [-4.9 + lpi * 0.75, 3.9, -2.4], mats.darkMetal);
-    }
-    // Lower platform - far side railing
-    bx([3.2, 0.06, 0.06], [-3.5, 4.35, 2.4], mats.darkMetal);
-    bx([3.2, 0.06, 0.06], [-3.5, 4.0, 2.4], mats.darkMetal);
-    for (var lpi2 = 0; lpi2 < 5; lpi2++) {
-        bx([0.06, 0.8, 0.06], [-4.9 + lpi2 * 0.75, 3.9, 2.4], mats.darkMetal);
-    }
-    // Lower platform - front railing
-    bx([0.06, 0.06, 4.8], [-5.0, 4.35, 0], mats.darkMetal);
-    bx([0.06, 0.06, 4.8], [-5.0, 4.0, 0], mats.darkMetal);
+    bx([0.06, 3.2, 0.06], [3.8, 3.5, -2.35], mats.darkMetal);
+    bx([0.06, 3.2, 0.06], [3.8, 3.5, -2.85], mats.darkMetal);
 
     // === HEADLIGHTS ===
-    cy(0.2, 0.2, 0.1, [-4.35, 4.6, -1.0], mats.light, [0, 0, Math.PI/2], 8);
-    cy(0.2, 0.2, 0.1, [-4.35, 4.6, 1.0], mats.light, [0, 0, Math.PI/2], 8);
-    cy(0.12, 0.12, 0.08, [-4.35, 3.6, -0.7], mats.light, [0, 0, Math.PI/2], 8);
-    cy(0.12, 0.12, 0.08, [-4.35, 3.6, 0.7], mats.light, [0, 0, Math.PI/2], 8);
+    cy(0.15, 0.15, 0.08, [2.8, 6.7, -0.5], mats.light, [0, 0, 0], 8);
+    cy(0.15, 0.15, 0.08, [2.8, 6.7, 0.5], mats.light, [0, 0, 0], 8);
 
-    // === EXHAUST ===
-    cy(0.12, 0.14, 2.0, [-0.3, 6.0, 1.5], mats.black, [0, 0, 0], 8);
-    cy(0.18, 0.18, 0.15, [-0.3, 7.05, 1.5], mats.accent, [0, 0, 0], 8);
-
-    // === WHEEL ARCHES / FENDERS ===
-    bx([2.0, 0.2, 0.5], [-3.8, 3.6, -2.0], mats.yellowDark);
-    bx([2.0, 0.2, 0.5], [-3.8, 3.6, 2.0], mats.yellowDark);
-    bx([3.0, 0.25, 0.5], [2.6, 4.0, -2.2], mats.yellowDark);
-    bx([3.0, 0.25, 0.5], [2.6, 4.0, 2.2], mats.yellowDark);
-
-    // === STRUCTURAL CHASSIS BEAMS (visible between wheels) ===
-    bx([6.0, 0.35, 0.3], [0, 2.0, -1.2], mats.darkMetal);
-    bx([6.0, 0.35, 0.3], [0, 2.0, 1.2], mats.darkMetal);
-    // Cross-members
-    bx([0.3, 0.3, 2.4], [-2.0, 2.0, 0], mats.darkMetal);
-    bx([0.3, 0.3, 2.4], [1.5, 2.0, 0], mats.darkMetal);
-    bx([0.3, 0.3, 2.4], [4.0, 2.0, 0], mats.darkMetal);
-
-    // === ENGINE SIDE PANELS (fill the gap between cab and grille) ===
-    bx([1.8, 2.0, 0.15], [-3.5, 4.3, -1.9], mats.yellow);
-    bx([1.8, 2.0, 0.15], [-3.5, 4.3, 1.9], mats.yellow);
-    // Engine access panel detail
-    bx([1.4, 0.8, 0.04], [-3.5, 4.0, -1.95], mats.yellowDark);
-    bx([1.4, 0.8, 0.04], [-3.5, 4.0, 1.95], mats.yellowDark);
-    // Louvres / vents on engine sides
-    for (var vi = 0; vi < 4; vi++) {
-        bx([0.25, 0.04, 0.05], [-4.0 + vi * 0.35, 4.6, -1.95], mats.darkMetal);
-        bx([0.25, 0.04, 0.05], [-4.0 + vi * 0.35, 4.6, 1.95], mats.darkMetal);
-    }
-
-    // === REAR TAILGATE BAR ===
-    bx([0.2, 0.35, bTw * 1.7], [bX1 + 0.5, bY1 - 0.5, 0], mats.yellowDark);
-    // Tailgate hinge cylinders
-    cy(0.08, 0.08, 0.4, [bX1 + 0.5, bY1 - 0.8, -bTw * 0.6], mats.darkMetal, [Math.PI/2, 0, 0], 8);
-    cy(0.08, 0.08, 0.4, [bX1 + 0.5, bY1 - 0.8, bTw * 0.6], mats.darkMetal, [Math.PI/2, 0, 0], 8);
-
-    // === HYDRAULIC RAM (tray lift cylinder, visible between cab and tray) ===
-    cy(0.12, 0.1, 2.8, [-0.4, 4.5, 0], mats.darkMetal, [0, 0, -0.25], 8);
-    cy(0.08, 0.06, 1.8, [-0.4, 5.8, -0.1], mats.darkMetal, [0, 0, -0.2], 8);
-
-    // Position truck in scene
-    truck.scale.setScalar(0.38);
-    truck.position.set(1.5, -1.0, 0);
-    truck.rotation.y = -0.6 + Math.PI;
+    // Position excavator in scene (angled to match reference perspective)
+    truck.scale.setScalar(0.32);
+    truck.position.set(0.5, -1.6, 0);
+    truck.rotation.y = -0.4;
     scene.add(truck);
 
     // === Wireframe geometry floating around ===

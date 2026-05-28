@@ -965,24 +965,22 @@ a {
 
 .gallery-track {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
 }
 
 .gallery-track img {
     width: 100%;
     height: 180px;
     object-fit: contain;
-    border-radius: 12px;
+    border-radius: 10px;
     border: none;
     background: none;
-    box-shadow: 0 0 20px rgba(5, 139, 148, 0.25), 0 0 40px rgba(5, 139, 148, 0.1);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .gallery-track img:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 30px rgba(5, 139, 148, 0.45), 0 0 60px rgba(5, 139, 148, 0.2);
+    transform: scale(1.06);
     z-index: 2;
     position: relative;
 }
@@ -2202,7 +2200,7 @@ a.contact-value:hover {
     .about-stats { grid-template-columns: repeat(3, 1fr); }
     .nav-inner { padding: 0 40px; }
     .tech-visual { max-width: 300px; }
-    .gallery-track { grid-template-columns: repeat(2, 1fr); }
+    .gallery-track { grid-template-columns: repeat(3, 1fr); }
     .team-card { min-width: 260px; max-width: 260px; }
     .sponsorships-timeline { grid-template-columns: 1fr; }
 }
@@ -2222,7 +2220,7 @@ a.contact-value:hover {
     .cursor-dot, .cursor-ring { display: none; }
     body { cursor: auto; }
     .tech-visual { display: none; }
-    .gallery-track { grid-template-columns: 1fr 1fr; }
+    .gallery-track { grid-template-columns: repeat(2, 1fr); }
     .gallery-track img { height: 140px; }
     .sponsorships-cta { padding: 40px 24px; }
     .enquiry-form { padding: 28px; }
