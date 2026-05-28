@@ -966,23 +966,33 @@ a {
 .gallery-track {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
+    gap: 20px;
 }
 
 .gallery-track img {
     width: 100%;
     height: 200px;
     object-fit: cover;
-    border-radius: 10px;
-    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    box-shadow: 0 0 20px rgba(5, 139, 148, 0.2), 0 0 40px rgba(5, 139, 148, 0.1);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
 }
 
 .gallery-track img:hover {
     transform: scale(1.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--color-accent-glow);
+    box-shadow: 0 0 30px rgba(5, 139, 148, 0.4), 0 0 60px rgba(5, 139, 148, 0.2);
     z-index: 2;
     position: relative;
+}
+
+.gallery-track img:nth-child(n+6) {
+    background: transparent;
+    object-fit: contain;
+    height: 140px;
+    padding: 10px;
+    filter: drop-shadow(0 0 12px rgba(5, 139, 148, 0.3));
 }
 
 .sponsorships-cta {
@@ -1503,8 +1513,8 @@ a.contact-value:hover {
 }
 
 .facility-video-wrap iframe {
-    width: 110%;
-    height: 110%;
+    width: 130%;
+    height: 130%;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1529,6 +1539,12 @@ a.contact-value:hover {
     opacity: 0;
 }
 
+.facility-hero-section.video-active .facility-content {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+}
+
 [data-theme="light"] .facility-overlay {
     background: linear-gradient(
         to bottom,
@@ -1545,6 +1561,7 @@ a.contact-value:hover {
     padding-top: 120px;
     padding-bottom: 100px;
     max-width: 720px;
+    transition: opacity 0.6s ease;
 }
 
 .facility-text {

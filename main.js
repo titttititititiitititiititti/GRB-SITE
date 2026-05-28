@@ -1125,6 +1125,8 @@
     var facilityOverlay = document.querySelector('.facility-overlay');
     var facilityMuted = true;
 
+    var facilityHeroSection = document.getElementById('facility');
+
     function muteVideo() {
         if (!facilityMuted) {
             facilityMuted = true;
@@ -1133,6 +1135,7 @@
             facilityUnmute.classList.remove('playing');
             facilityUnmute.querySelector('.unmute-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
             if (facilityOverlay) facilityOverlay.classList.remove('hidden');
+            if (facilityHeroSection) facilityHeroSection.classList.remove('video-active');
         }
     }
 
@@ -1145,6 +1148,7 @@
                 facilityUnmute.classList.add('playing');
                 facilityUnmute.querySelector('.unmute-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/>';
                 if (facilityOverlay) facilityOverlay.classList.add('hidden');
+                if (facilityHeroSection) facilityHeroSection.classList.add('video-active');
             } else {
                 muteVideo();
             }
