@@ -735,7 +735,7 @@
     // Position excavator (facing camera, front-quarter view, larger)
     truck.scale.setScalar(0.42);
     truck.position.set(1.5, -2.0, 0);
-    truck.rotation.y = Math.PI + 2.1;
+    truck.rotation.y = Math.PI + 3.67;
     scene.add(truck);
 
     // === Wireframe geometry floating around ===
