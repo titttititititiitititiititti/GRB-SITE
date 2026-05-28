@@ -1503,9 +1503,12 @@ a.contact-value:hover {
 }
 
 .facility-video-wrap iframe {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 110%;
+    height: 110%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     pointer-events: none;
 }
 
@@ -1519,6 +1522,11 @@ a.contact-value:hover {
         rgba(8, 8, 12, 0.92) 100%
     );
     pointer-events: none;
+    transition: opacity 0.6s ease;
+}
+
+.facility-overlay.hidden {
+    opacity: 0;
 }
 
 [data-theme="light"] .facility-overlay {
@@ -1752,29 +1760,21 @@ a.contact-value:hover {
 .machinery-summary {
     font-size: 0.8rem;
     color: var(--color-text-muted);
-    transition: opacity 0.3s;
 }
 
 .machinery-detail {
     font-size: 0.85rem;
     color: var(--color-text-muted);
     line-height: 1.6;
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s, margin 0.3s;
-    margin-top: 0;
+    display: none;
 }
 
 .machinery-card:hover .machinery-summary {
-    opacity: 0;
-    position: absolute;
+    display: none;
 }
 
 .machinery-card:hover .machinery-detail {
-    max-height: 100px;
-    opacity: 1;
-    margin-top: 8px;
+    display: block;
 }
 
 /* Testing Timeline */
@@ -1937,6 +1937,7 @@ a.contact-value:hover {
     gap: 10px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .transport-tab {

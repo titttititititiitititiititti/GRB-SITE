@@ -1122,22 +1122,43 @@
     // ─── FACILITY VIDEO UNMUTE ─────────────────────────────────
     var facilityUnmute = document.getElementById('facility-unmute');
     var facilityVideo = document.getElementById('facility-video');
+    var facilityOverlay = document.querySelector('.facility-overlay');
     var facilityMuted = true;
+
+    function muteVideo() {
+        if (!facilityMuted) {
+            facilityMuted = true;
+            var src = facilityVideo.src;
+            facilityVideo.src = src.replace('muted=0', 'muted=1');
+            facilityUnmute.classList.remove('playing');
+            facilityUnmute.querySelector('.unmute-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+            if (facilityOverlay) facilityOverlay.classList.remove('hidden');
+        }
+    }
 
     if (facilityUnmute && facilityVideo) {
         facilityUnmute.addEventListener('click', function() {
-            facilityMuted = !facilityMuted;
-            var src = facilityVideo.src;
             if (facilityMuted) {
-                facilityVideo.src = src.replace('muted=0', 'muted=1');
-                facilityUnmute.classList.remove('playing');
-                facilityUnmute.querySelector('.unmute-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
-            } else {
+                facilityMuted = false;
+                var src = facilityVideo.src;
                 facilityVideo.src = src.replace('muted=1', 'muted=0');
                 facilityUnmute.classList.add('playing');
                 facilityUnmute.querySelector('.unmute-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/>';
+                if (facilityOverlay) facilityOverlay.classList.add('hidden');
+            } else {
+                muteVideo();
             }
         });
+
+        var facilitySection = document.getElementById('facility');
+        if (facilitySection) {
+            var facilityVisObs = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (!entry.isIntersecting) muteVideo();
+                });
+            }, { threshold: 0.1 });
+            facilityVisObs.observe(facilitySection);
+        }
     }
 
     // ─── FACILITY TIMELINE SCROLL ANIMATION ──────────────────
