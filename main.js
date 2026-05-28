@@ -1119,6 +1119,35 @@
         });
     }
 
+    // ─── TEAM CAROUSEL ────────────────────────────────────────
+    var teamTrack = document.querySelector('.team-carousel-track');
+    var teamCards = document.querySelectorAll('.team-card');
+    var activeTeamIndex = 0;
+
+    function setActiveTeamCard(index) {
+        if (index < 0) index = 0;
+        if (index >= teamCards.length) index = teamCards.length - 1;
+        activeTeamIndex = index;
+
+        teamCards.forEach(function(c) { c.classList.remove('active'); });
+        teamCards[index].classList.add('active');
+
+        var cardWidth = teamCards[0].offsetWidth + 28;
+        var containerWidth = teamTrack.parentElement.offsetWidth;
+        var offset = (index * cardWidth) - (containerWidth / 2) + (cardWidth / 2);
+        offset = Math.max(0, Math.min(offset, teamTrack.scrollWidth - containerWidth));
+        teamTrack.style.transform = 'translateX(-' + offset + 'px)';
+    }
+
+    if (teamCards.length) {
+        setActiveTeamCard(0);
+        teamCards.forEach(function(card, i) {
+            card.addEventListener('mouseenter', function() {
+                setActiveTeamCard(i);
+            });
+        });
+    }
+
     // ─── FACILITY VIDEO UNMUTE ─────────────────────────────────
     var facilityUnmute = document.getElementById('facility-unmute');
     var facilityVideo = document.getElementById('facility-video');

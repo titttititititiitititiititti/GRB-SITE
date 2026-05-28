@@ -971,28 +971,21 @@ a {
 
 .gallery-track img {
     width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 12px;
+    height: 180px;
+    object-fit: contain;
+    border-radius: 0;
     border: none;
-    background: transparent;
-    box-shadow: 0 0 20px rgba(5, 139, 148, 0.2), 0 0 40px rgba(5, 139, 148, 0.1);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+    background: none;
+    box-shadow: none;
+    filter: drop-shadow(0 0 16px rgba(5, 139, 148, 0.3)) drop-shadow(0 0 40px rgba(5, 139, 148, 0.12));
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s;
 }
 
 .gallery-track img:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 30px rgba(5, 139, 148, 0.4), 0 0 60px rgba(5, 139, 148, 0.2);
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 24px rgba(5, 139, 148, 0.5)) drop-shadow(0 0 50px rgba(5, 139, 148, 0.25));
     z-index: 2;
     position: relative;
-}
-
-.gallery-track img:nth-child(n+6) {
-    background: transparent;
-    object-fit: contain;
-    height: 140px;
-    padding: 10px;
-    filter: drop-shadow(0 0 12px rgba(5, 139, 148, 0.3));
 }
 
 .sponsorships-cta {
@@ -1618,6 +1611,28 @@ a.contact-value:hover {
     color: var(--color-accent);
 }
 
+.unmute-label {
+    position: absolute;
+    right: 56px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.facility-unmute.playing .unmute-label {
+    opacity: 0;
+}
+
 /* Facility Map */
 .facility-map-section {
     background: var(--color-bg);
@@ -1746,14 +1761,43 @@ a.contact-value:hover {
     border-radius: 14px;
     padding: 32px 24px;
     text-align: center;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.5s, box-shadow 0.5s;
     overflow: hidden;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .machinery-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     border-color: var(--color-accent);
     box-shadow: 0 0 30px var(--color-accent-glow), 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.machinery-card .machinery-summary,
+.machinery-card .machinery-detail {
+    transition: opacity 0.4s ease;
+}
+
+.machinery-card .machinery-detail {
+    position: absolute;
+    opacity: 0;
+}
+
+.machinery-card .machinery-summary {
+    opacity: 1;
+}
+
+.machinery-card:hover .machinery-detail {
+    position: static;
+    opacity: 1;
+}
+
+.machinery-card:hover .machinery-summary {
+    position: absolute;
+    opacity: 0;
 }
 
 .machinery-icon {
@@ -1783,15 +1827,6 @@ a.contact-value:hover {
     font-size: 0.85rem;
     color: var(--color-text-muted);
     line-height: 1.6;
-    display: none;
-}
-
-.machinery-card:hover .machinery-summary {
-    display: none;
-}
-
-.machinery-card:hover .machinery-detail {
-    display: block;
 }
 
 /* Testing Timeline */
@@ -2052,26 +2087,60 @@ a.contact-value:hover {
 /* Team Section */
 .team-section {
     background: var(--color-bg);
+    overflow: hidden;
 }
 
 .team-header {
     margin-bottom: 60px;
 }
 
-.team-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.team-carousel {
+    position: relative;
+    overflow: hidden;
+    padding: 20px 0;
+}
+
+.team-carousel-track {
+    display: flex;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     gap: 28px;
+}
+
+.team-card {
+    min-width: calc(33.333% - 19px);
+    flex-shrink: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding: 36px 28px;
+    cursor: pointer;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s, box-shadow 0.4s, opacity 0.4s;
+    opacity: 0.6;
+    transform: scale(0.92);
+}
+
+.team-card.active {
+    opacity: 1;
+    transform: scale(1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 30px var(--color-accent-glow), 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.team-card:hover:not(.active) {
+    opacity: 0.85;
+    transform: scale(0.95);
 }
 
 .team-card .card-inner {
     text-align: center;
+    display: flex;
+    flex-direction: column;
     align-items: center;
 }
 
 .team-photo-placeholder {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
     background: var(--color-bg-alt);
     border: 2px solid var(--color-border-light);
@@ -2080,19 +2149,24 @@ a.contact-value:hover {
     justify-content: center;
     margin-bottom: 20px;
     color: var(--color-text-muted);
+    transition: border-color 0.4s;
+}
+
+.team-card.active .team-photo-placeholder {
+    border-color: var(--color-accent);
 }
 
 .team-name {
     font-family: var(--font-heading);
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 4px;
 }
 
 .team-role {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--color-accent);
     margin-bottom: 14px;
@@ -2100,7 +2174,7 @@ a.contact-value:hover {
 }
 
 .team-bio {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     line-height: 1.6;
     color: var(--color-text-muted);
 }
@@ -2129,7 +2203,7 @@ a.contact-value:hover {
     .nav-inner { padding: 0 40px; }
     .tech-visual { max-width: 300px; }
     .gallery-track { grid-template-columns: repeat(3, 1fr); }
-    .team-grid { grid-template-columns: 1fr 1fr; }
+    .team-card { min-width: calc(50% - 14px); }
     .sponsorships-timeline { grid-template-columns: 1fr; }
 }
 
@@ -2152,7 +2226,7 @@ a.contact-value:hover {
     .gallery-track img { height: 150px; }
     .sponsorships-cta { padding: 40px 24px; }
     .enquiry-form { padding: 28px; }
-    .team-grid { grid-template-columns: 1fr; }
+    .team-card { min-width: calc(80% - 14px); }
     .video-section { min-height: 50vh; }
     .facility-hero-section { min-height: 60vh; }
     .facility-content { padding-top: 80px; padding-bottom: 60px; }
