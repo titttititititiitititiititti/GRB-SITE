@@ -364,9 +364,13 @@
     underGlow.position.set(0, -1.0, 3);
     scene.add(underGlow);
 
-    const frontFill = new THREE.DirectionalLight(0xffffff, 0.6);
-    frontFill.position.set(0, 2, 8);
+    const frontFill = new THREE.DirectionalLight(0xffffff, 0.7);
+    frontFill.position.set(0, 4, 8);
     scene.add(frontFill);
+
+    const boomLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    boomLight.position.set(6, 8, 2);
+    scene.add(boomLight);
 
     // Materials — Liebherr 9800 excavator (white body, dark undercarriage)
     const mats = {
@@ -382,6 +386,7 @@
         accent: new THREE.MeshStandardMaterial({ color: 0x058B94, metalness: 0.6, roughness: 0.25, emissive: 0x058B94, emissiveIntensity: 0.25, flatShading: true }),
         yellow: new THREE.MeshStandardMaterial({ color: 0xd4940f, roughness: 0.68, metalness: 0.15, flatShading: true }),
         counterweight: new THREE.MeshStandardMaterial({ color: 0x3d3d42, roughness: 0.8, metalness: 0.3, flatShading: true }),
+        boomDark: new THREE.MeshStandardMaterial({ color: 0x1e1e22, roughness: 0.8, metalness: 0.3, flatShading: true, side: THREE.DoubleSide }),
     };
 
     const truck = new THREE.Group();
@@ -474,7 +479,14 @@
         bx([0.6, 0.5, tW * 0.5], [tLen / 2 - 0.5, tH * 0.38, zOff], mats.trackFrame);
     }
     makeTrack(-3.4);
-    makeTrack(3.4);
+    // Far track (simplified — not visible to camera)
+    (function() {
+        var zOff = 3.4, tLen = 9.5, tH = 1.8, tW = 1.6;
+        bx([tLen, tH * 0.7, tW], [0, tH * 0.35, zOff], mats.trackFrame);
+        bx([tLen, 0.14, tW + 0.12], [0, 0.04, zOff], mats.trackPad);
+        cy(0.75, 0.75, tW * 0.55, [-tLen / 2 + 0.15, tH * 0.38, zOff], mats.darkMetal, [Math.PI / 2, 0, 0], 10);
+        cy(0.65, 0.65, tW * 0.5, [tLen / 2 - 0.15, tH * 0.38, zOff], mats.darkMetal, [Math.PI / 2, 0, 0], 10);
+    })();
 
     // Track cross-frame (car body connecting both crawlers)
     bx([5.0, 0.8, 5.4], [0, 1.6, 0], mats.darkMetal);
@@ -494,17 +506,15 @@
     // Front body face (angled)
     bx([0.15, 2.2, 4.8], [3.3, 3.9, 0], mats.whiteDark);
 
-    // Side panel seam lines (horizontal detail)
+    // Side panel seam lines (near side only — camera facing)
     for (var pli = 0; pli < 3; pli++) {
         var ply = 3.0 + pli * 0.9;
         bx([6.3, 0.04, 0.05], [0, ply, -2.75], mats.whiteDark);
-        bx([6.3, 0.04, 0.05], [0, ply, 2.75], mats.whiteDark);
     }
-    // Vertical panel seams
+    // Vertical panel seams (near side only)
     for (var pvs = 0; pvs < 4; pvs++) {
         var pvx = -2.0 + pvs * 1.8;
         bx([0.04, 2.2, 0.05], [pvx, 3.9, -2.75], mats.whiteDark);
-        bx([0.04, 2.2, 0.05], [pvx, 3.9, 2.75], mats.whiteDark);
     }
 
     // Engine intake louvers (top of engine deck)
@@ -512,36 +522,92 @@
         bx([0.06, 0.08, 4.0], [-2.8 + lv * 0.22, 6.9, 0], mats.darkMetal);
     }
 
-    // Cooling pack (rear side — vertical fins)
-    for (var cf = 0; cf < 15; cf++) {
-        bx([0.04, 1.4, 0.08], [-3.0, 5.8, -2.0 + cf * 0.28], mats.darkMetal);
-    }
+    // Exhaust stacks (twin — shorter, capped)
+    cy(0.14, 0.16, 1.4, [-2.0, 7.2, 1.5], mats.darkMetal, [0, 0, 0], 10);
+    cy(0.14, 0.16, 1.4, [-2.0, 7.2, -1.5], mats.darkMetal, [0, 0, 0], 10);
+    // Exhaust caps
+    bx([0.3, 0.06, 0.3], [-2.0, 7.95, 1.5], mats.darkMetal);
+    bx([0.3, 0.06, 0.3], [-2.0, 7.95, -1.5], mats.darkMetal);
 
-    // Exhaust stacks (twin)
-    cy(0.14, 0.16, 2.0, [-2.0, 7.5, 1.5], mats.darkMetal, [0, 0, 0], 10);
-    cy(0.14, 0.16, 2.0, [-2.0, 7.5, -1.5], mats.darkMetal, [0, 0, 0], 10);
-    cy(0.18, 0.18, 0.12, [-2.0, 8.55, 1.5], mats.accent, [0, 0, 0], 10);
-    cy(0.18, 0.18, 0.12, [-2.0, 8.55, -1.5], mats.accent, [0, 0, 0], 10);
-    // Exhaust rain caps
-    bx([0.35, 0.04, 0.35], [-2.0, 8.65, 1.5], mats.darkMetal);
-    bx([0.35, 0.04, 0.35], [-2.0, 8.65, -1.5], mats.darkMetal);
-
-    // Brand panel area (dark rectangle — "LIEBHERR" zone)
-    bx([2.2, 0.8, 0.06], [0.5, 4.0, 2.76], mats.black);
+    // Brand panel area (dark rectangle — "LIEBHERR" zone, near side only)
     bx([2.2, 0.8, 0.06], [0.5, 4.0, -2.76], mats.black);
+
+    // === BODY SIDE DETAILS (near side — camera facing) ===
+    // Access panel handles (small horizontal bars)
+    bx([0.4, 0.04, 0.04], [-1.0, 3.5, -2.76], mats.darkMetal);
+    bx([0.4, 0.04, 0.04], [1.8, 3.5, -2.76], mats.darkMetal);
+    // Inspection panel outlines
+    bx([1.0, 0.8, 0.04], [-1.5, 4.6, -2.76], mats.whiteDark);
+    bx([0.8, 0.8, 0.04], [2.0, 4.6, -2.76], mats.whiteDark);
+    // Vents / louvered grille (near side, lower)
+    for (var vt = 0; vt < 6; vt++) {
+        bx([0.8, 0.04, 0.04], [1.5, 3.2 + vt * 0.12, -2.76], mats.darkMetal);
+    }
+    // Hydraulic line routing (small pipes along body side)
+    bx([3.0, 0.06, 0.06], [0.5, 5.0, -2.76], mats.darkMetal);
+    bx([3.0, 0.06, 0.06], [0.5, 5.1, -2.76], mats.darkMetal);
+    // Step / toe-kick plate at platform edge
+    bx([5.5, 0.2, 0.15], [0, 2.72, -2.9], mats.darkMetal);
+    // Fire suppression cylinder (small tank on near side)
+    cy(0.12, 0.12, 0.8, [-2.5, 3.4, -2.7], mats.hydraulic, [0, 0, -1.5708], 8);
+    // Electrical junction box
+    bx([0.3, 0.25, 0.12], [2.5, 4.8, -2.76], mats.darkMetal);
+    // Tie-down / anchor points
+    bx([0.12, 0.12, 0.08], [-2.8, 2.8, -2.76], mats.darkMetal);
+    bx([0.12, 0.12, 0.08], [2.8, 2.8, -2.76], mats.darkMetal);
+
+    // --- Additional body side detail ---
+    // Large radiator grille panel
+    bx([1.6, 1.2, 0.06], [-0.2, 4.0, -2.76], mats.darkMetal);
+    for (var rg = 0; rg < 8; rg++) {
+        bx([1.4, 0.03, 0.03], [-0.2, 3.5 + rg * 0.14, -2.78], mats.trackFrame);
+    }
+    // Engine access door outline (lower right)
+    bx([1.4, 1.6, 0.04], [1.0, 3.9, -2.77], mats.trackFrame);
+    bx([0.06, 1.5, 0.04], [0.3, 3.9, -2.78], mats.trackFrame);
+    bx([0.06, 1.5, 0.04], [1.7, 3.9, -2.78], mats.trackFrame);
+    // Door latch
+    bx([0.08, 0.2, 0.06], [1.65, 3.9, -2.79], mats.hydraulic);
+    // Warning label placeholders (small rectangles)
+    bx([0.4, 0.25, 0.02], [-2.0, 3.3, -2.77], mats.yellow);
+    bx([0.3, 0.2, 0.02], [0.5, 3.0, -2.77], mats.yellow);
+    // Exhaust stack (vertical cylinder on upper body)
+    cy(0.15, 0.12, 0.8, [-1.0, 6.4, -2.2], mats.darkMetal, [0, 0, 0], 8);
+    cy(0.18, 0.18, 0.1, [-1.0, 6.8, -2.2], mats.darkMetal, [0, 0, 0], 8);
+    // Pre-cleaner intake (cylindrical)
+    cy(0.1, 0.1, 0.5, [-1.8, 6.2, -2.4], mats.hydraulic, [0, 0, 0], 8);
+    cy(0.14, 0.14, 0.06, [-1.8, 6.45, -2.4], mats.darkMetal, [0, 0, 0], 8);
+    // Fuel filler cap
+    cy(0.08, 0.08, 0.04, [2.2, 3.8, -2.78], mats.hydraulic, [0, 0, Math.PI / 2], 8);
+    // Grab rail (vertical bar near engine deck)
+    cy(0.03, 0.03, 1.2, [-0.8, 5.5, -2.78], mats.yellow, [0, 0, 0], 6);
+    cy(0.03, 0.03, 1.2, [-0.4, 5.5, -2.78], mats.yellow, [0, 0, 0], 6);
+    bx([0.4, 0.06, 0.06], [-0.6, 6.1, -2.78], mats.yellow);
+    // Hydraulic valve bank (row of small blocks)
+    for (var hv = 0; hv < 5; hv++) {
+        bx([0.15, 0.2, 0.12], [-2.2 + hv * 0.22, 5.3, -2.76], mats.hydraulic);
+    }
+    // Hose routing from valve bank (downward)
+    for (var hr = 0; hr < 3; hr++) {
+        cy(0.025, 0.025, 1.5, [-2.1 + hr * 0.3, 4.5, -2.77], mats.black, [0, 0, 0], 6);
+    }
+    // Bolted flange (circular detail)
+    cy(0.18, 0.18, 0.04, [0.0, 4.4, -2.78], mats.darkMetal, [0, 0, Math.PI / 2], 8);
+    cy(0.08, 0.08, 0.05, [0.0, 4.4, -2.79], mats.trackFrame, [0, 0, Math.PI / 2], 6);
+    // Lifting eye brackets (top of body)
+    bx([0.15, 0.3, 0.08], [-3.0, 5.2, -2.6], mats.darkMetal);
+    bx([0.15, 0.3, 0.08], [2.8, 5.2, -2.6], mats.darkMetal);
 
     // === COUNTERWEIGHT (massive rear block) ===
     bx([2.2, 2.8, 5.6], [-4.2, 3.7, 0], mats.counterweight);
     bx([1.8, 0.8, 5.4], [-4.2, 5.3, 0], mats.counterweight);
     // Rounded edges (chamfer blocks)
     bx([0.3, 2.6, 5.4], [-5.35, 3.7, 0], mats.counterweight);
-    // Lifting lugs
+    // Lifting lugs (near side only)
     cy(0.12, 0.12, 0.4, [-4.0, 5.8, -2.0], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
-    cy(0.12, 0.12, 0.4, [-4.0, 5.8, 2.0], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
-    // Counterweight horizontal ribs
+    // Counterweight horizontal ribs (near side only)
     for (var cwi = 0; cwi < 5; cwi++) {
         bx([2.1, 0.06, 0.12], [-4.2, 2.6 + cwi * 0.6, -2.7], mats.darkMetal);
-        bx([2.1, 0.06, 0.12], [-4.2, 2.6 + cwi * 0.6, 2.7], mats.darkMetal);
     }
     // Counterweight vertical stiffeners
     bx([0.08, 2.6, 0.1], [-4.2, 3.7, -1.8], mats.darkMetal);
@@ -590,152 +656,199 @@
     // Door handle
     bx([0.04, 0.15, 0.04], [3.0, 6.2, -0.63], mats.darkMetal);
 
-    // === BOOM (massive two-piece, tapered) ===
-    // Boom base section (thick, angling upward from house)
-    bx([5.0, 1.8, 1.2], [4.5, 5.8, 0.3], mats.white, [-0.2, 0, 0.18]);
-    // Boom base panel lines
-    bx([4.8, 0.05, 1.22], [4.5, 5.8, 0.3], mats.whiteDark, [-0.2, 0, 0.18]);
-    bx([4.8, 1.8, 0.05], [4.5, 5.8, -0.28], mats.whiteDark, [-0.2, 0, 0.18]);
-    bx([4.8, 1.8, 0.05], [4.5, 5.8, 0.88], mats.whiteDark, [-0.2, 0, 0.18]);
-    // Boom mid section (tapered down)
-    bx([4.2, 1.5, 1.0], [8.0, 4.6, 0.3], mats.white, [0.15, 0, -0.12]);
-    // Boom mid panel lines
-    bx([4.0, 0.05, 1.02], [8.0, 4.6, 0.3], mats.whiteDark, [0.15, 0, -0.12]);
-    bx([4.0, 1.5, 0.05], [8.0, 4.6, -0.18], mats.whiteDark, [0.15, 0, -0.12]);
-    bx([4.0, 1.5, 0.05], [8.0, 4.6, 0.78], mats.whiteDark, [0.15, 0, -0.12]);
-    // Boom tip (narrower)
-    bx([2.0, 1.2, 0.85], [10.8, 3.2, 0.3], mats.white, [0.35, 0, -0.05]);
+    // === BOOM ARM ASSEMBLY (reference-accurate: boom UP, stick DOWN) ===
+    var boomPivotX = 2.5, boomPivotY = 5.2;
+    var boomAngle = 0.55;
+    var boomLen = 7.5;
 
-    // Boom foot pivot (large pins)
-    cy(0.35, 0.35, 2.0, [2.2, 4.8, 0.3], mats.darkMetal, [Math.PI / 2, 0, 0], 12);
-    // Boom foot pivot housing
-    bx([0.8, 1.2, 2.2], [2.2, 4.8, 0.3], mats.white);
+    // Boom group — pivots from front of house, angled UPWARD
+    var boomGrp = new THREE.Group();
+    boomGrp.position.set(boomPivotX, boomPivotY, 0.3);
+    boomGrp.rotation.z = boomAngle;
+    truck.add(boomGrp);
 
-    // Side plate webbing on boom
-    for (var bwi = 0; bwi < 5; bwi++) {
-        var bwx = 3.5 + bwi * 1.6;
-        bx([0.06, 1.4, 1.1], [bwx, 5.3 - bwi * 0.35, 0.3], mats.whiteDark, [-0.05 + bwi * 0.06, 0, 0]);
+    // Boom pivot pin (large)
+    cy(0.55, 0.55, 3.0, [0, 0, 0], mats.darkMetal, [Math.PI / 2, 0, 0], 12, boomGrp);
+    // Boom pivot housing / clevis
+    bx([1.5, 2.2, 3.0], [0, 0, 0], mats.boomDark, [0, 0, 0], boomGrp);
+
+    // Boom main body (dark, shorter and fatter)
+    bx([boomLen, 2.2, 1.7], [boomLen / 2, 0, 0], mats.boomDark, [0, 0, 0], boomGrp);
+    // Boom side plates (visible seam lines on near side Z=-0.85)
+    bx([boomLen - 0.5, 2.2, 0.04], [boomLen / 2, 0, -0.85], mats.darkMetal, [0, 0, 0], boomGrp);
+    // Boom top/bottom edge lines
+    bx([boomLen - 0.5, 0.04, 1.72], [boomLen / 2, 1.1, 0], mats.darkMetal, [0, 0, 0], boomGrp);
+    bx([boomLen - 0.5, 0.04, 1.72], [boomLen / 2, -1.1, 0], mats.darkMetal, [0, 0, 0], boomGrp);
+    // Weld seam (horizontal line along boom face)
+    bx([boomLen * 0.85, 0.06, 0.06], [boomLen / 2, 0, -0.67], mats.trackFrame, [0, 0, 0], boomGrp);
+
+    // Boom detail — pipe brackets (small tabs along near side)
+    for (var pb = 0; pb < 4; pb++) {
+        bx([0.14, 0.18, 0.14], [1.8 + pb * 1.6, 1.12, -0.8], mats.darkMetal, [0, 0, 0], boomGrp);
     }
+    // Boom detail — bottom flange / reinforcement strip
+    bx([boomLen * 0.7, 0.12, 1.3], [boomLen / 2 + 0.5, -1.12, 0], mats.darkMetal, [0, 0, 0], boomGrp);
+    // Boom detail — lifting eye near pivot
+    bx([0.25, 0.35, 0.25], [1.2, 1.12, -0.7], mats.darkMetal, [0, 0, 0], boomGrp);
+    // Boom detail — grease nipple points
+    bx([0.1, 0.1, 0.1], [0.3, 0.6, -0.87], mats.accent, [0, 0, 0], boomGrp);
+    bx([0.1, 0.1, 0.1], [boomLen - 0.3, 0.4, -0.7], mats.accent, [0, 0, 0], boomGrp);
 
-    // === STICK / DIPPER ARM (tapered) ===
-    bx([5.0, 1.0, 0.8], [11.5, 2.0, 0.3], mats.white, [0.45, 0, 0.05]);
-    // Stick panel lines
-    bx([4.8, 0.05, 0.82], [11.5, 2.0, 0.3], mats.whiteDark, [0.45, 0, 0.05]);
-    bx([4.8, 1.0, 0.05], [11.5, 2.0, -0.08], mats.whiteDark, [0.45, 0, 0.05]);
-    bx([4.8, 1.0, 0.05], [11.5, 2.0, 0.68], mats.whiteDark, [0.45, 0, 0.05]);
-    // Stick cylinder mounting bracket
-    bx([0.6, 0.5, 1.0], [9.8, 3.8, 0.3], mats.darkMetal);
-    // Stick-to-boom pivot pin
-    cy(0.25, 0.25, 1.4, [10.2, 3.0, 0.3], mats.darkMetal, [Math.PI / 2, 0, 0], 10);
+    // --- Stick group — attached at end of boom, angled DOWN ---
+    var stickAngle = -1.4;
+    var stickLen = 5.5;
 
-    // === BUCKET (face shovel, 7 teeth, very wide) ===
-    var bktW = 3.6, bktH = 2.4, bktD = 1.8;
-    // Back plate
-    bx([bktD, bktH, bktW], [13.5, 0.2, 0.3], mats.white, [0.5, 0, 0.2]);
-    // Floor plate
-    bx([bktD + 0.3, 0.15, bktW + 0.1], [13.6, -0.8, 0.3], mats.darkMetal, [0.5, 0, 0.2]);
-    // Side cheek plates (left and right)
-    bx([bktD, bktH, 0.12], [13.5, 0.2, -1.5], mats.whiteDark, [0.5, 0, 0.2]);
-    bx([bktD, bktH, 0.12], [13.5, 0.2, 2.1], mats.whiteDark, [0.5, 0, 0.2]);
-    // Wear plate (cutting edge)
-    bx([0.2, bktH * 0.95, bktW + 0.15], [14.5, 0.2, 0.3], mats.darkMetal, [0.5, 0, 0.2]);
-    // Bucket teeth (7)
-    for (var bt = 0; bt < 7; bt++) {
-        var btz = -1.5 + bt * 0.5;
-        bx([0.4, 0.3, 0.2], [15.0, -0.9 + bt * 0.02, btz + 0.3], mats.darkMetal, [0.5, 0, 0.25]);
+    var stickGrp = new THREE.Group();
+    stickGrp.position.set(boomLen, 0, 0);
+    stickGrp.rotation.z = stickAngle;
+    boomGrp.add(stickGrp);
+
+    // Stick pivot pin (elbow joint)
+    cy(0.45, 0.45, 2.2, [0, 0, 0], mats.darkMetal, [Math.PI / 2, 0, 0], 10, stickGrp);
+    // Stick pivot housing
+    bx([1.0, 1.8, 2.2], [0, 0, 0], mats.boomDark, [0, 0, 0], stickGrp);
+
+    // Stick body (shorter, fatter)
+    bx([stickLen, 1.5, 1.2], [stickLen / 2, 0, 0], mats.boomDark, [0, 0, 0], stickGrp);
+    // Stick side plate seam (near side)
+    bx([stickLen - 0.4, 1.5, 0.04], [stickLen / 2, 0, -0.6], mats.darkMetal, [0, 0, 0], stickGrp);
+    // Stick top/bottom lines
+    bx([stickLen - 0.4, 0.04, 1.22], [stickLen / 2, 0.75, 0], mats.darkMetal, [0, 0, 0], stickGrp);
+    bx([stickLen - 0.4, 0.04, 1.22], [stickLen / 2, -0.75, 0], mats.darkMetal, [0, 0, 0], stickGrp);
+    // Stick cylinder bracket (top, near pivot)
+    bx([0.7, 0.9, 1.5], [0.8, 0.85, 0], mats.darkMetal, [0, 0, 0], stickGrp);
+    // Stick detail — weld seam along near side
+    bx([stickLen * 0.8, 0.06, 0.06], [stickLen / 2, 0, -0.62], mats.trackFrame, [0, 0, 0], stickGrp);
+    // Stick detail — pipe bracket tabs
+    for (var spb = 0; spb < 3; spb++) {
+        bx([0.12, 0.14, 0.12], [1.2 + spb * 1.5, 0.76, -0.55], mats.darkMetal, [0, 0, 0], stickGrp);
     }
-    // Tooth adapters
-    for (var ta = 0; ta < 7; ta++) {
-        var taz = -1.5 + ta * 0.5;
-        bx([0.25, 0.2, 0.22], [14.7, -0.7 + ta * 0.02, taz + 0.3], mats.trackFrame, [0.5, 0, 0.22]);
-    }
-    // Bucket linkage (tie rod)
-    cy(0.08, 0.08, 2.5, [12.0, 2.2, 0.3], mats.hydraulic, [0, 0, 0.6], 8);
-    // Bell crank
-    bx([0.6, 0.4, 0.3], [12.8, 1.5, 0.3], mats.darkMetal, [0, 0, 0.4]);
+    // Stick detail — reinforcement plate at elbow end
+    bx([1.4, 1.5, 0.06], [0.2, 0, -0.62], mats.darkMetal, [0, 0, 0], stickGrp);
+    // Stick detail — grease point
+    bx([0.09, 0.09, 0.09], [0.3, 0.5, -0.63], mats.accent, [0, 0, 0], stickGrp);
+
+    // --- Bucket group — attached at end of stick, curled forward ---
+    var bucketAngle = -0.3;
+
+    var bucketGrp = new THREE.Group();
+    bucketGrp.position.set(stickLen, 0, 0);
+    bucketGrp.rotation.z = bucketAngle;
+    stickGrp.add(bucketGrp);
+
     // Bucket pivot pin
-    cy(0.2, 0.2, bktW + 0.4, [13.0, 0.8, 0.3], mats.darkMetal, [Math.PI / 2, 0, 0], 10);
+    cy(0.35, 0.35, 4.2, [0, 0, 0], mats.darkMetal, [Math.PI / 2, 0, 0], 10, bucketGrp);
 
-    // === HYDRAULIC CYLINDERS (thick, with chrome rods) ===
-    // Boom cylinders (pair — massive)
-    cy(0.25, 0.2, 4.5, [3.8, 7.2, -1.4], mats.hydraulic, [0, 0, 0.45], 10);
-    cy(0.25, 0.2, 4.5, [3.8, 7.2, 2.0], mats.hydraulic, [0, 0, 0.45], 10);
-    // Boom cylinder rods (chrome/accent)
-    cy(0.12, 0.12, 2.5, [5.8, 7.8, -1.4], mats.accent, [0, 0, 0.4], 10);
-    cy(0.12, 0.12, 2.5, [5.8, 7.8, 2.0], mats.accent, [0, 0, 0.4], 10);
-    // Boom cylinder pin joints (top)
-    cy(0.15, 0.15, 0.6, [6.8, 7.8, -1.4], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
-    cy(0.15, 0.15, 0.6, [6.8, 7.8, 2.0], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
-    // Boom cylinder pin joints (base)
-    cy(0.15, 0.15, 0.6, [2.0, 5.8, -1.4], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
-    cy(0.15, 0.15, 0.6, [2.0, 5.8, 2.0], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
+    // Bucket back plate (dark)
+    bx([2.2, 2.8, 4.0], [1.1, 0, 0], mats.boomDark, [0, 0, 0], bucketGrp);
+    // Bucket floor plate
+    bx([2.4, 0.2, 4.1], [1.1, -1.4, 0], mats.darkMetal, [0, 0, 0], bucketGrp);
+    // Side cheek plates
+    bx([2.4, 2.8, 0.16], [1.1, 0, -2.0], mats.darkMetal, [0, 0, 0], bucketGrp);
+    bx([2.4, 2.8, 0.16], [1.1, 0, 2.0], mats.darkMetal, [0, 0, 0], bucketGrp);
+    // Cutting edge / wear plate (lip)
+    bx([0.26, 2.7, 4.1], [2.3, 0, 0], mats.darkMetal, [0, 0, 0], bucketGrp);
+    // Wear strips (horizontal lines on back plate)
+    bx([2.1, 0.08, 4.02], [1.1, 0.7, 0], mats.darkMetal, [0, 0, 0], bucketGrp);
+    bx([2.1, 0.08, 4.02], [1.1, -0.5, 0], mats.darkMetal, [0, 0, 0], bucketGrp);
+    // Lip shrouds (protectors between teeth)
+    for (var ls = 0; ls < 7; ls++) {
+        bx([0.18, 0.4, 0.18], [2.4, -0.6, -1.5 + ls * 0.5], mats.darkMetal, [0, 0, 0], bucketGrp);
+    }
+    // Teeth (8 — teal/accent color matching reference green)
+    for (var bt = 0; bt < 8; bt++) {
+        var btz = -1.75 + bt * 0.5;
+        bx([0.65, 0.35, 0.26], [2.6, -0.9 + bt * 0.005, btz], mats.accent, [0, 0, 0], bucketGrp);
+    }
+    // Tooth adapters (dark metal)
+    for (var ta = 0; ta < 8; ta++) {
+        bx([0.26, 0.28, 0.28], [2.4, -0.9 + ta * 0.005, -1.75 + ta * 0.5], mats.darkMetal, [0, 0, 0], bucketGrp);
+    }
 
-    // Stick cylinder (on top of boom)
-    cy(0.2, 0.16, 3.8, [7.5, 6.5, 0.3], mats.hydraulic, [0, 0, -0.25], 10);
-    cy(0.1, 0.1, 2.2, [9.2, 5.8, 0.3], mats.accent, [0, 0, -0.3], 10);
-    // Stick cylinder pins
-    cy(0.12, 0.12, 0.5, [5.8, 6.9, 0.3], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
-    cy(0.12, 0.12, 0.5, [10.4, 5.2, 0.3], mats.darkMetal, [Math.PI / 2, 0, 0], 8);
+    // === HYDRAULIC CYLINDERS ===
+    // Boom lift pistons (from body base up to mid-boom — in truck group)
+    // Boom angle is 0.55 rad, pistons run parallel to boom so same angle
+    cy(0.32, 0.24, 5.0, [3.8, 6.0, -0.9], mats.hydraulic, [0, 0, -0.55], 10);
+    cy(0.32, 0.24, 5.0, [3.8, 6.0, 0.9], mats.hydraulic, [0, 0, -0.55], 10);
+    // Piston chrome rods (same angle)
+    cy(0.14, 0.14, 2.8, [5.2, 7.6, -0.9], mats.accent, [0, 0, -0.55], 10);
+    cy(0.14, 0.14, 2.8, [5.2, 7.6, 0.9], mats.accent, [0, 0, -0.55], 10);
 
-    // Bucket cylinders (pair, smaller)
-    cy(0.14, 0.11, 2.6, [11.0, 3.5, -0.3], mats.hydraulic, [0, 0, 0.35], 8);
-    cy(0.14, 0.11, 2.6, [11.0, 3.5, 0.9], mats.hydraulic, [0, 0, 0.35], 8);
-    cy(0.07, 0.07, 1.5, [12.0, 3.8, -0.3], mats.accent, [0, 0, 0.3], 8);
-    cy(0.07, 0.07, 1.5, [12.0, 3.8, 0.9], mats.accent, [0, 0, 0.3], 8);
+    // Stick cylinder (inside boomGrp — flipped to run along arm)
+    cy(0.22, 0.18, 4.0, [4.0, 1.15, 0], mats.hydraulic, [0, 0, -1.5708], 10, boomGrp);
+    cy(0.11, 0.11, 2.0, [6.5, 1.15, 0], mats.accent, [0, 0, -1.5708], 10, boomGrp);
 
-    // Hydraulic hose routing (along boom)
-    cy(0.04, 0.04, 5.0, [5.5, 6.8, -0.5], mats.black, [0, 0, 0.15], 6);
-    cy(0.04, 0.04, 5.0, [5.5, 6.8, 1.1], mats.black, [0, 0, 0.15], 6);
-    cy(0.04, 0.04, 4.0, [8.5, 5.4, -0.3], mats.black, [0, 0, -0.1], 6);
-    cy(0.04, 0.04, 4.0, [8.5, 5.4, 0.9], mats.black, [0, 0, -0.1], 6);
+    // Bucket linkage cylinders (inside stickGrp)
+    cy(0.14, 0.1, 2.0, [2.5, 0.8, -0.55], mats.hydraulic, [0, 0, -1.5708], 8, stickGrp);
+    cy(0.14, 0.1, 2.0, [2.5, 0.8, 0.55], mats.hydraulic, [0, 0, -1.5708], 8, stickGrp);
+    cy(0.07, 0.07, 1.2, [3.8, 0.8, -0.55], mats.accent, [0, 0, -1.5708], 8, stickGrp);
+    cy(0.07, 0.07, 1.2, [3.8, 0.8, 0.55], mats.accent, [0, 0, -1.5708], 8, stickGrp);
+
+    // === HYDRAULIC HOSE BUNDLE (along boom top) ===
+    for (var hi = 0; hi < 4; hi++) {
+        var hz = -0.28 + hi * 0.18;
+        cy(0.04, 0.04, 6.5, [4.0, 1.12, hz], mats.black, [0, 0, -1.5708], 6, boomGrp);
+    }
 
     // === PLATFORMS & WALKWAYS ===
     bx([6.8, 0.1, 6.0], [0, 2.65, 0], mats.whiteDark);
-    // Platform edge trim
-    bx([6.8, 0.12, 0.06], [0, 2.72, -3.0], mats.darkMetal);
-    bx([6.8, 0.12, 0.06], [0, 2.72, 3.0], mats.darkMetal);
-    bx([0.06, 0.12, 6.0], [-3.4, 2.72, 0], mats.darkMetal);
-    bx([0.06, 0.12, 6.0], [3.4, 2.72, 0], mats.darkMetal);
+    // Platform edge trim (near side + front only)
+    bx([6.8, 0.12, 0.06], [0, 2.72, -3.0], mats.yellow);
+    bx([0.06, 0.12, 6.0], [3.4, 2.72, 0], mats.yellow);
 
-    // Handrail stanchions (full perimeter, 12 posts per side)
+    // Handrail stanchions (near side only)
     for (var hrs = 0; hrs < 10; hrs++) {
         var hrx = -3.2 + hrs * 0.72;
-        bx([0.05, 0.9, 0.05], [hrx, 3.15, -3.0], mats.darkMetal);
-        bx([0.05, 0.9, 0.05], [hrx, 3.15, 3.0], mats.darkMetal);
+        bx([0.05, 0.9, 0.05], [hrx, 3.15, -3.0], mats.yellow);
     }
-    // Handrails (top rail)
-    bx([7.0, 0.05, 0.05], [0, 3.6, -3.0], mats.darkMetal);
-    bx([7.0, 0.05, 0.05], [0, 3.6, 3.0], mats.darkMetal);
-    // Handrails (mid rail)
-    bx([7.0, 0.05, 0.05], [0, 3.3, -3.0], mats.darkMetal);
-    bx([7.0, 0.05, 0.05], [0, 3.3, 3.0], mats.darkMetal);
-    // Rear handrail
-    bx([0.05, 0.05, 6.0], [-3.4, 3.6, 0], mats.darkMetal);
-    bx([0.05, 0.05, 6.0], [-3.4, 3.3, 0], mats.darkMetal);
+    // Handrails (near side — top rail)
+    bx([7.0, 0.05, 0.05], [0, 3.6, -3.0], mats.yellow);
+    // Handrails (near side — mid rail)
+    bx([7.0, 0.05, 0.05], [0, 3.3, -3.0], mats.yellow);
 
-    // === LADDER (access to cab platform) ===
-    for (var lai = 0; lai < 8; lai++) {
-        bx([0.05, 0.05, 0.6], [4.0, 2.7 + lai * 0.45, -2.8], mats.darkMetal);
+    // === STAIRCASE (tall access stair, near side — prominent yellow) ===
+    // Main stair stringers (two vertical rails from ground to platform)
+    bx([0.06, 4.0, 0.06], [3.9, 2.7, -3.2], mats.yellow);
+    bx([0.06, 4.0, 0.06], [3.9, 2.7, -3.7], mats.yellow);
+    // Stair treads (10 rungs connecting the two stringers)
+    for (var st = 0; st < 10; st++) {
+        var sy = 1.0 + st * 0.38;
+        bx([0.04, 0.04, 0.55], [3.9, sy, -3.45], mats.yellow);
     }
-    bx([0.05, 3.6, 0.05], [4.0, 4.2, -2.55], mats.darkMetal);
-    bx([0.05, 3.6, 0.05], [4.0, 4.2, -3.05], mats.darkMetal);
-    // Ladder cage (safety hoop)
+    // Staircase cage (3 hoops connecting to stringers)
+    for (var sc = 0; sc < 4; sc++) {
+        var scy = 1.5 + sc * 1.0;
+        // Horizontal bar across top of hoop
+        bx([0.25, 0.04, 0.6], [4.15, scy, -3.45], mats.yellow);
+        // Vertical posts connecting hoop to stringers
+        bx([0.04, 0.25, 0.04], [4.15, scy - 0.12, -3.2], mats.yellow);
+        bx([0.04, 0.25, 0.04], [4.15, scy - 0.12, -3.7], mats.yellow);
+    }
+
+    // === LADDER (access to cab platform — yellow) ===
+    // Side rails (vertical, from near ground to platform level)
+    bx([0.05, 3.2, 0.05], [4.0, 3.3, -2.55], mats.yellow);
+    bx([0.05, 3.2, 0.05], [4.0, 3.3, -3.05], mats.yellow);
+    // Rungs (connecting the two rails)
+    for (var lai = 0; lai < 7; lai++) {
+        bx([0.05, 0.05, 0.5], [4.0, 1.9 + lai * 0.45, -2.8], mats.yellow);
+    }
+    // Ladder cage hoops (attached to rails at same X position)
     for (var lc = 0; lc < 3; lc++) {
-        var lcy = 3.5 + lc * 1.0;
-        bx([0.3, 0.04, 0.65], [4.15, lcy, -2.8], mats.darkMetal);
+        var lcy = 2.5 + lc * 1.0;
+        bx([0.2, 0.04, 0.55], [4.1, lcy, -2.8], mats.yellow);
+        bx([0.04, 0.2, 0.04], [4.1, lcy - 0.1, -2.55], mats.yellow);
+        bx([0.04, 0.2, 0.04], [4.1, lcy - 0.1, -3.05], mats.yellow);
     }
 
     // === HEADLIGHTS & WORK LIGHTS ===
     cy(0.12, 0.12, 0.06, [3.4, 7.3, -1.0], mats.light, [0, 0, 0], 8);
     cy(0.12, 0.12, 0.06, [3.4, 7.3, 0.6], mats.light, [0, 0, 0], 8);
-    // Boom-mounted lights
-    cy(0.08, 0.08, 0.05, [5.5, 7.0, -0.8], mats.light, [0, 0, 0], 6);
-    cy(0.08, 0.08, 0.05, [5.5, 7.0, 1.4], mats.light, [0, 0, 0], 6);
 
-    // Position excavator (facing camera, front-quarter view, larger)
-    truck.scale.setScalar(0.42);
-    truck.position.set(1.5, -2.0, 0);
-    truck.rotation.y = Math.PI + 3.67 + Math.PI - 0.7;
+    // Position excavator (front-quarter view, locked orientation)
+    truck.scale.setScalar(0.46);
+    truck.position.set(3.0, -0.8, 0);
+    truck.rotation.y = Math.PI * 2.91;
     scene.add(truck);
 
     // === Wireframe geometry floating around ===
@@ -798,17 +911,16 @@
     });
     const grid = new THREE.Mesh(gridGeo, gridMat);
     grid.rotation.x = -Math.PI / 2;
-    grid.position.y = -1.5;
+    grid.position.y = -2.5;
     scene.add(grid);
 
-    camera.position.set(4, 2.5, 8.5);
-    camera.lookAt(0, 0.8, 0);
+    camera.position.set(4, 3.0, 9.0);
+    camera.lookAt(1.5, 1.5, 0);
 
-    // ─── Scroll-Driven Camera + Truck Rotation ─────────────────
-    let targetRotY = Math.PI + 3.67 + Math.PI - 0.7;
-    let targetRotX = 0;
-    let targetCamY = 2.5;
-    let targetCamX = 4;
+    // ─── Fixed Orientation + Mouse Parallax + Gentle Scroll ─────────────────
+    const baseRotY = Math.PI * 2.91;
+    let targetRotY = baseRotY;
+    const targetRotX = 0;
     let truckMouseX = 0, truckMouseY = 0;
 
     ScrollTrigger.create({
@@ -817,19 +929,15 @@
         end: 'bottom top',
         scrub: true,
         onUpdate: (self) => {
-            const p = self.progress;
-            targetRotY = Math.PI + 3.67 + Math.PI - 0.7 + (p * Math.PI * 0.85);
-            targetRotX = Math.sin(p * Math.PI) * 0.04;
-            targetCamY = 2.5 - p * 1.0;
-            targetCamX = 4 + p * 0.5;
+            targetRotY = baseRotY + (self.progress * Math.PI * 0.15);
         }
     });
 
     document.addEventListener('mousemove', (e) => {
         const nx = (e.clientX / window.innerWidth - 0.5) * 2;
         const ny = (e.clientY / window.innerHeight - 0.5) * 2;
-        truckMouseX = ny * 0.06;
-        truckMouseY = nx * 0.1;
+        truckMouseX = ny * 0.04;
+        truckMouseY = nx * 0.06;
     });
 
     // Render loop (visibility-gated for performance)
@@ -847,15 +955,13 @@
 
         truck.rotation.y += (targetRotY + truckMouseY - truck.rotation.y) * 0.035;
         truck.rotation.x += (targetRotX + truckMouseX - truck.rotation.x) * 0.035;
-        truck.position.y = -1.0 + Math.sin(sceneTime * 0.7) * 0.03;
+        truck.position.y = -0.8 + Math.sin(sceneTime * 0.7) * 0.03;
 
         for (var wi = 0; wi < wheelGroups.length; wi++) {
             wheelGroups[wi].rotation.y += 0.008;
         }
 
-        camera.position.y += (targetCamY - camera.position.y) * 0.04;
-        camera.position.x += (targetCamX - camera.position.x) * 0.04;
-        camera.lookAt(0, 0.8, 0);
+        camera.lookAt(0.5, 1.0, 0);
 
         wireframes.forEach(wf => {
             wf.rotation.x += wf.userData.rotSpeed;
@@ -1071,7 +1177,21 @@
             var next = current === 'dark' ? 'light' : 'dark';
             htmlEl.setAttribute('data-theme', next);
             localStorage.setItem('grb-theme', next);
+            if (next === 'light') {
+                mats.white.color.setHex(0x3a3a3f);
+                mats.whiteDark.color.setHex(0x2e2e33);
+            } else {
+                mats.white.color.setHex(0xe8e8e8);
+                mats.whiteDark.color.setHex(0xc0c0c0);
+            }
         });
+    }
+
+    // Apply initial theme to 3D model materials
+    var initialTheme = htmlEl.getAttribute('data-theme') || 'dark';
+    if (initialTheme === 'light') {
+        mats.white.color.setHex(0x3a3a3f);
+        mats.whiteDark.color.setHex(0x2e2e33);
     }
 
     // Nav hide/show
