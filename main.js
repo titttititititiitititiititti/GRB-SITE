@@ -1,10 +1,15 @@
 /* ======================================================
-   GRB Global — Immersive Dark Theme Experience
+   GRB Mining — Immersive Dark Theme Experience
    3D Mining Haul Truck + Per-Section Effects + GSAP + Lenis
 ====================================================== */
 
 (function () {
     'use strict';
+
+    // ─── Device Detection ────────────────────────────────────────
+    const isMobile = window.innerWidth <= 768;
+    const isTablet = window.innerWidth <= 1024 && window.innerWidth > 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // ─── Smooth Scrolling (Lenis) ──────────────────────────────
     const lenis = new Lenis({
@@ -99,7 +104,8 @@
     }
 
     const bgParticles = [];
-    for (let i = 0; i < 70; i++) {
+    const bgParticleCount = isMobile ? 25 : (isTablet ? 40 : 70);
+    for (let i = 0; i < bgParticleCount; i++) {
         bgParticles.push(new Particle());
     }
 
@@ -175,12 +181,13 @@
     let bgFrameSkip = 0;
     function animateBg() {
         bgFrameSkip++;
-        if (bgFrameSkip % 2 !== 0) { requestAnimationFrame(animateBg); return; }
+        var skipRate = isMobile ? 3 : 2;
+        if (bgFrameSkip % skipRate !== 0) { requestAnimationFrame(animateBg); return; }
         bgTime += 0.02;
         bgCtx.clearRect(0, 0, bgWidth, bgHeight);
         geoShapes.forEach(s => { s.update(bgTime); s.draw(); });
         bgParticles.forEach(p => { p.update(bgTime); p.draw(); });
-        drawConnections();
+        if (!isMobile) drawConnections();
         requestAnimationFrame(animateBg);
     }
     animateBg();
@@ -197,7 +204,8 @@
         canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
         container.appendChild(canvas);
         const ctx = canvas.getContext('2d');
-        const density = Math.min(parseInt(container.getAttribute('data-density')) || 20, 25);
+        const rawDensity = parseInt(container.getAttribute('data-density')) || 20;
+        const density = Math.min(isMobile ? Math.floor(rawDensity * 0.4) : rawDensity, 25);
         let particles = [];
         let w, h;
         container._particlesVisible = false;
@@ -331,7 +339,7 @@
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -846,44 +854,46 @@
     cy(0.12, 0.12, 0.06, [3.4, 7.3, 0.6], mats.light, [0, 0, 0], 8);
 
     // Position excavator (front-quarter view, locked orientation)
-    truck.scale.setScalar(0.46);
-    truck.position.set(3.0, -0.8, 0);
+    truck.scale.setScalar(isMobile ? 0.3 : 0.46);
+    truck.position.set(isMobile ? 1.0 : 3.0, isMobile ? -1.2 : -0.8, 0);
     truck.rotation.y = Math.PI * 2.91;
     scene.add(truck);
 
     // === Wireframe geometry floating around ===
     const wireframes = [];
-    const wireGeos = [
-        new THREE.IcosahedronGeometry(0.4, 0),
-        new THREE.OctahedronGeometry(0.35, 0),
-        new THREE.TetrahedronGeometry(0.3, 0),
-        new THREE.DodecahedronGeometry(0.3, 0),
-    ];
-    const wireMat = new THREE.MeshBasicMaterial({
-        color: 0x058B94,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.25,
-    });
+    if (!isMobile) {
+        const wireGeos = [
+            new THREE.IcosahedronGeometry(0.4, 0),
+            new THREE.OctahedronGeometry(0.35, 0),
+            new THREE.TetrahedronGeometry(0.3, 0),
+            new THREE.DodecahedronGeometry(0.3, 0),
+        ];
+        const wireMat = new THREE.MeshBasicMaterial({
+            color: 0x058B94,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.25,
+        });
 
-    for (let i = 0; i < 8; i++) {
-        const geo = wireGeos[i % wireGeos.length];
-        const mesh = new THREE.Mesh(geo, wireMat.clone());
-        mesh.position.set(
-            (Math.random() - 0.5) * 14,
-            (Math.random() - 0.5) * 8 + 1,
-            (Math.random() - 0.5) * 8
-        );
-        mesh.userData.rotSpeed = (Math.random() - 0.5) * 0.015;
-        mesh.userData.floatSpeed = Math.random() * 0.4 + 0.2;
-        mesh.userData.floatOffset = Math.random() * Math.PI * 2;
-        mesh.userData.baseY = mesh.position.y;
-        scene.add(mesh);
-        wireframes.push(mesh);
+        for (let i = 0; i < 8; i++) {
+            const geo = wireGeos[i % wireGeos.length];
+            const mesh = new THREE.Mesh(geo, wireMat.clone());
+            mesh.position.set(
+                (Math.random() - 0.5) * 14,
+                (Math.random() - 0.5) * 8 + 1,
+                (Math.random() - 0.5) * 8
+            );
+            mesh.userData.rotSpeed = (Math.random() - 0.5) * 0.015;
+            mesh.userData.floatSpeed = Math.random() * 0.4 + 0.2;
+            mesh.userData.floatOffset = Math.random() * Math.PI * 2;
+            mesh.userData.baseY = mesh.position.y;
+            scene.add(mesh);
+            wireframes.push(mesh);
+        }
     }
 
     // === 3D Particles ===
-    const particleCount3D = 200;
+    const particleCount3D = isMobile ? 60 : 200;
     const pGeo = new THREE.BufferGeometry();
     const pPositions = new Float32Array(particleCount3D * 3);
     for (let i = 0; i < particleCount3D * 3; i += 3) {
@@ -914,8 +924,13 @@
     grid.position.y = -2.5;
     scene.add(grid);
 
-    camera.position.set(4, 3.0, 9.0);
-    camera.lookAt(1.5, 1.5, 0);
+    if (isMobile) {
+        camera.position.set(2, 2.5, 10.0);
+        camera.lookAt(0.5, 0.5, 0);
+    } else {
+        camera.position.set(4, 3.0, 9.0);
+        camera.lookAt(1.5, 1.5, 0);
+    }
 
     // ─── Fixed Orientation + Mouse Parallax + Gentle Scroll ─────────────────
     const baseRotY = Math.PI * 2.91;
@@ -943,6 +958,7 @@
     // Render loop (visibility-gated for performance)
     let sceneTime = 0;
     let heroVisible = true;
+    let frameCount = 0;
     const heroObserver = new IntersectionObserver((entries) => {
         heroVisible = entries[0].isIntersecting;
     }, { rootMargin: '200px' });
@@ -951,17 +967,19 @@
     function animate() {
         requestAnimationFrame(animate);
         if (!heroVisible) return;
+        frameCount++;
+        if (isMobile && frameCount % 2 !== 0) return;
         sceneTime += 0.01;
 
         truck.rotation.y += (targetRotY + truckMouseY - truck.rotation.y) * 0.035;
         truck.rotation.x += (targetRotX + truckMouseX - truck.rotation.x) * 0.035;
-        truck.position.y = -0.8 + Math.sin(sceneTime * 0.7) * 0.03;
+        truck.position.y = (isMobile ? -1.2 : -0.8) + Math.sin(sceneTime * 0.7) * 0.03;
 
         for (var wi = 0; wi < wheelGroups.length; wi++) {
             wheelGroups[wi].rotation.y += 0.008;
         }
 
-        camera.lookAt(0.5, 1.0, 0);
+        camera.lookAt(isMobile ? 0.5 : 1.5, isMobile ? 0.5 : 1.5, 0);
 
         wireframes.forEach(wf => {
             wf.rotation.x += wf.userData.rotSpeed;
@@ -1194,6 +1212,24 @@
         mats.whiteDark.color.setHex(0x2e2e33);
     }
 
+    // ─── MOBILE NAV TOGGLE ─────────────────────────────────────
+    var navToggle = document.getElementById('nav-toggle');
+    var navLinks = document.querySelector('.nav-links');
+    if (navToggle && navLinks) {
+        navToggle.addEventListener('click', function() {
+            navToggle.classList.toggle('active');
+            navLinks.classList.toggle('open');
+            document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
+        });
+        navLinks.querySelectorAll('.nav-link').forEach(function(link) {
+            link.addEventListener('click', function() {
+                navToggle.classList.remove('active');
+                navLinks.classList.remove('open');
+                document.body.style.overflow = '';
+            });
+        });
+    }
+
     // Nav hide/show
     var lastScroll = 0;
     var navbar = document.getElementById('navbar');
@@ -1268,10 +1304,17 @@
                 method: 'POST',
                 body: formData,
                 headers: { 'Accept': 'application/json' }
-            }).then(function() {
-                formStatus.className = 'form-status success';
-                formStatus.textContent = 'Thank you! Your enquiry has been sent successfully.';
-                enquiryForm.reset();
+            }).then(function(response) {
+                return response.json();
+            }).then(function(data) {
+                if (data.success) {
+                    formStatus.className = 'form-status success';
+                    formStatus.textContent = 'Thank you! Your enquiry has been sent successfully.';
+                    enquiryForm.reset();
+                } else {
+                    formStatus.className = 'form-status error';
+                    formStatus.textContent = 'Something went wrong. Please email us directly at martin@grb.com.au';
+                }
             }).catch(function() {
                 formStatus.className = 'form-status error';
                 formStatus.textContent = 'Something went wrong. Please email us directly at martin@grb.com.au';
