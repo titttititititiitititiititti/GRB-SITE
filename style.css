@@ -1381,6 +1381,25 @@ a.contact-value:hover {
     transform: rotate(-45deg) translate(5px, -5px);
 }
 
+/* Mobile nav backdrop */
+.nav-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.nav-backdrop.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+@media (max-width: 768px) {
+    .nav-backdrop { display: block; }
+}
+
 [data-theme="dark"] .theme-icon-sun { display: block; }
 [data-theme="dark"] .theme-icon-moon { display: none; }
 [data-theme="light"] .theme-icon-sun { display: none; }
@@ -1549,12 +1568,15 @@ a.contact-value:hover {
         rgba(8, 8, 12, 0.55) 40%,
         rgba(8, 8, 12, 0.92) 100%
     );
-    pointer-events: none;
+    pointer-events: all;
+    cursor: pointer;
+    z-index: 5;
     transition: opacity 0.6s ease;
 }
 
 .facility-overlay.hidden {
     opacity: 0;
+    pointer-events: none;
 }
 
 .facility-hero-section.video-active .facility-content {
@@ -1603,6 +1625,8 @@ a.contact-value:hover {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 
@@ -1610,21 +1634,6 @@ a.contact-value:hover {
     border-color: var(--color-accent);
     box-shadow: 0 0 20px var(--color-accent-glow);
     transform: scale(1.05);
-}
-
-.facility-unmute .unmute-ring {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.facility-unmute .unmute-ring circle {
-    stroke: var(--color-border);
-    transition: stroke 0.3s;
-}
-
-.facility-unmute:hover .unmute-ring circle {
-    stroke: var(--color-accent);
 }
 
 .facility-unmute .unmute-icon {
@@ -2242,24 +2251,27 @@ a.contact-value:hover {
         position: fixed;
         top: 0;
         left: 0;
-        right: 0;
         bottom: 0;
+        width: 280px;
         background: var(--color-bg);
+        border-right: 1px solid var(--color-border);
         flex-direction: column;
         justify-content: center;
-        align-items: center;
-        gap: 32px;
-        opacity: 0;
+        align-items: flex-start;
+        padding: 80px 40px;
+        gap: 28px;
+        transform: translateX(-100%);
         pointer-events: none;
-        transition: opacity 0.3s ease;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 999;
+        box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
     }
     .nav-links.open {
-        opacity: 1;
+        transform: translateX(0);
         pointer-events: all;
     }
     .nav-links .nav-link {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         letter-spacing: 2px;
     }
     .nav-toggle { display: flex; }
@@ -2281,6 +2293,9 @@ a.contact-value:hover {
     .sponsorships-cta { padding: 40px 24px; }
     .enquiry-form { padding: 28px; }
     .team-card { min-width: 240px; max-width: 240px; }
+    .team-carousel { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding: 20px 24px; }
+    .team-carousel-track { transform: none !important; transition: none; }
+    .team-card { scroll-snap-align: start; }
     .video-section { min-height: 50vh; }
     .facility-hero-section { min-height: 60vh; }
     .facility-content { padding-top: 80px; padding-bottom: 60px; }
@@ -2304,6 +2319,8 @@ a.contact-value:hover {
     .transport-tabs { flex-wrap: wrap; gap: 8px; }
     .transport-tab { font-size: 0.75rem; padding: 8px 14px; }
     #hero-canvas-container { opacity: 0.5; }
+    .team-carousel::-webkit-scrollbar { display: none; }
+    .team-carousel { scrollbar-width: none; }
 }
 
 @media (max-width: 480px) {

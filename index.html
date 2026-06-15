@@ -115,6 +115,7 @@
 
     <div id="cursor-dot" class="cursor-dot"></div>
     <div id="cursor-ring" class="cursor-ring"></div>
+    <div id="nav-backdrop" class="nav-backdrop"></div>
 
     <canvas id="bg-canvas"></canvas>
 
@@ -294,12 +295,9 @@
             <!-- FACILITY EXPERIENCE -->
             <section id="facility" class="section facility-hero-section">
                 <div class="facility-video-wrap">
-                    <iframe id="facility-video" src="https://streamable.com/e/qcrmjw?autoplay=1&muted=1&loop=1&nocontrols=1" frameborder="0" allow="autoplay" allowfullscreen></iframe>
-                    <div class="facility-overlay"></div>
+                    <iframe id="facility-video" src="https://streamable.com/e/qcrmjw?autoplay=1&muted=1&loop=1&nocontrols=1" frameborder="0" allow="autoplay; fullscreen" allowfullscreen playsinline></iframe>
+                    <div class="facility-overlay" id="facility-overlay"></div>
                     <button id="facility-unmute" class="facility-unmute" aria-label="Unmute video">
-                        <svg class="unmute-ring" width="48" height="48" viewBox="0 0 48 48">
-                            <circle cx="24" cy="24" r="20" fill="none" stroke-width="2"/>
-                        </svg>
                         <svg class="unmute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
                         </svg>

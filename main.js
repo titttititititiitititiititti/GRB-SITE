@@ -336,9 +336,9 @@
     const heroContainer = document.getElementById('hero-canvas-container');
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, heroContainer.clientWidth / heroContainer.clientHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(heroContainer.clientWidth, heroContainer.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true;
@@ -996,9 +996,11 @@
     animate();
 
     window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
+        var w = heroContainer.clientWidth;
+        var h = heroContainer.clientHeight;
+        camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(w, h);
     });
 
     // ─── LOADING SCREEN ──────────────────────────────────────
@@ -1215,18 +1217,32 @@
     // ─── MOBILE NAV TOGGLE ─────────────────────────────────────
     var navToggle = document.getElementById('nav-toggle');
     var navLinks = document.querySelector('.nav-links');
+    var navBackdrop = document.getElementById('nav-backdrop');
     if (navToggle && navLinks) {
+        function closeNav() {
+            navToggle.classList.remove('active');
+            navLinks.classList.remove('open');
+            if (navBackdrop) navBackdrop.classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+        function openNav() {
+            navToggle.classList.add('active');
+            navLinks.classList.add('open');
+            if (navBackdrop) navBackdrop.classList.add('visible');
+            document.body.style.overflow = 'hidden';
+        }
         navToggle.addEventListener('click', function() {
-            navToggle.classList.toggle('active');
-            navLinks.classList.toggle('open');
-            document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
+            if (navLinks.classList.contains('open')) {
+                closeNav();
+            } else {
+                openNav();
+            }
         });
+        if (navBackdrop) {
+            navBackdrop.addEventListener('click', closeNav);
+        }
         navLinks.querySelectorAll('.nav-link').forEach(function(link) {
-            link.addEventListener('click', function() {
-                navToggle.classList.remove('active');
-                navLinks.classList.remove('open');
-                document.body.style.overflow = '';
-            });
+            link.addEventListener('click', closeNav);
         });
     }
 
@@ -1338,20 +1354,31 @@
         teamCards.forEach(function(c) { c.classList.remove('active'); });
         teamCards[index].classList.add('active');
 
-        var cardWidth = teamCards[0].offsetWidth + 28;
-        var containerWidth = teamTrack.parentElement.offsetWidth;
-        var offset = (index * cardWidth) - (containerWidth / 2) + (cardWidth / 2);
-        offset = Math.max(0, Math.min(offset, teamTrack.scrollWidth - containerWidth));
-        teamTrack.style.transform = 'translateX(-' + offset + 'px)';
+        if (!isMobile) {
+            var cardWidth = teamCards[0].offsetWidth + 28;
+            var containerWidth = teamTrack.parentElement.offsetWidth;
+            var offset = (index * cardWidth) - (containerWidth / 2) + (cardWidth / 2);
+            offset = Math.max(0, Math.min(offset, teamTrack.scrollWidth - containerWidth));
+            teamTrack.style.transform = 'translateX(-' + offset + 'px)';
+        }
     }
 
     if (teamCards.length) {
         setActiveTeamCard(0);
-        teamCards.forEach(function(card, i) {
-            card.addEventListener('mouseenter', function() {
-                setActiveTeamCard(i);
+        if (isMobile) {
+            teamTrack.style.transform = 'none';
+            teamCards.forEach(function(card, i) {
+                card.addEventListener('click', function() {
+                    setActiveTeamCard(i);
+                });
             });
-        });
+        } else {
+            teamCards.forEach(function(card, i) {
+                card.addEventListener('mouseenter', function() {
+                    setActiveTeamCard(i);
+                });
+            });
+        }
     }
 
     // ─── FACILITY VIDEO UNMUTE ─────────────────────────────────
@@ -1374,20 +1401,35 @@
         }
     }
 
+    function unmuteVideo() {
+        facilityMuted = false;
+        var src = facilityVideo.src;
+        facilityVideo.src = src.replace('muted=1', 'muted=0');
+        facilityUnmute.classList.add('playing');
+        facilityUnmute.querySelector('.unmute-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/>';
+        if (facilityOverlay) facilityOverlay.classList.add('hidden');
+        if (facilityHeroSection) facilityHeroSection.classList.add('video-active');
+    }
+
     if (facilityUnmute && facilityVideo) {
-        facilityUnmute.addEventListener('click', function() {
+        facilityUnmute.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (facilityMuted) {
-                facilityMuted = false;
-                var src = facilityVideo.src;
-                facilityVideo.src = src.replace('muted=1', 'muted=0');
-                facilityUnmute.classList.add('playing');
-                facilityUnmute.querySelector('.unmute-icon').innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/>';
-                if (facilityOverlay) facilityOverlay.classList.add('hidden');
-                if (facilityHeroSection) facilityHeroSection.classList.add('video-active');
+                unmuteVideo();
             } else {
                 muteVideo();
             }
         });
+
+        if (facilityOverlay) {
+            facilityOverlay.addEventListener('click', function() {
+                if (facilityMuted) {
+                    unmuteVideo();
+                } else {
+                    muteVideo();
+                }
+            });
+        }
 
         var facilitySection = document.getElementById('facility');
         if (facilitySection) {
