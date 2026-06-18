@@ -1,59 +1,88 @@
 /* ======================================================
-   GRB Mining — 3D Site Model (Facility Layout)
-   Three.js interactive site plan with satellite imagery base
+   GRB Mining — 3D Site Model
+   Satellite imagery base with interactive 3D overlays
 ====================================================== */
 
 (function () {
     'use strict';
 
     // ═══════════════════════════════════════════════════════════════
-    // SITE DATA MODEL
-    // The property runs at ~45 degrees NW-SE.
-    // We place the textured ground plane at this angle.
-    // Coordinates: X across, Z along length, Y up.
-    // Origin at center of property for simplicity.
+    // COORDINATE MAPPING
+    // The ChatGPT aerial image is used as ground texture.
+    // We map positions as percentages of the image, then convert
+    // to world coordinates on the ground plane.
+    //
+    // Image: ~1792x1024 → ground plane: 900 x 514 world units
+    // Origin (0,0) = center of image
+    // X: left=-450, right=+450
+    // Z: top(far)=-257, bottom(near)=+257
+    //
+    // The property runs NW(top-left) to SE(bottom-right) at ~45°.
+    // The developed area is in the bottom-right quadrant.
+    // ═══════════════════════════════════════════════════════════════
+
+    var PLANE_W = 900;
+    var PLANE_H = 514;
+
+    // Convert image percentage (0-1) to world XZ position
+    function imgToWorld(pctX, pctZ) {
+        return {
+            x: (pctX - 0.5) * PLANE_W,
+            z: (pctZ - 0.5) * PLANE_H
+        };
+    }
+
+    // Property angle in the image (~45 degrees clockwise from horizontal)
+    var PROP_ANGLE = -0.75; // radians, for rotating elements to align with property
+
+    // ═══════════════════════════════════════════════════════════════
+    // FACILITY ELEMENTS — positions mapped from layout.png
+    // Percentages are approximate center positions in the aerial image
     // ═══════════════════════════════════════════════════════════════
 
     var SITE = {
-        // Property dimensions (metres)
-        length: 700,
-        width: 180,
-        rotation: -0.78, // ~45 degrees to match aerial
-
-        // Sheds (blue in layout.png) - positions relative to SE end
+        // Sheds (blue in layout.png)
+        // Looking at layout.png, the blue rectangles are:
+        // 1. Small square shed - between the two red areas
+        // 2. Long horizontal workshop - along SE side of lower red area
+        // 3. Tall vertical equipment bay - far SE end
         sheds: [
-            { id: 'shed-a', name: 'Equipment Bay', x: 80, z: 45, w: 60, d: 60, h: 12, color: 0x1a2a40 },
-            { id: 'shed-b', name: 'Main Workshop', x: 150, z: 70, w: 80, d: 20, h: 14, color: 0x1a2a40 },
-            { id: 'shed-c', name: 'Parts Store', x: 180, z: 30, w: 45, d: 18, h: 10, color: 0x1a2a40 },
-            { id: 'shed-small', name: 'Storage', x: 100, z: 80, w: 12, d: 12, h: 5, color: 0x1a2a40 }
+            { name: 'Storage Shed', pctX: 0.57, pctZ: 0.70, w: 14, d: 14, h: 6 },
+            { name: 'Main Workshop', pctX: 0.64, pctZ: 0.76, w: 70, d: 16, h: 14 },
+            { name: 'Equipment Bay', pctX: 0.74, pctZ: 0.68, w: 16, d: 50, h: 12 }
         ],
 
-        // Concrete hardstand (red in layout.png) - flat paved areas
+        // Hardstand areas (red in layout.png) - flat concrete
+        // 1. Upper-left red square (slightly rotated) 
+        // 2. Lower-right red rectangle (SE end)
         hardstands: [
-            { id: 'hs-north', name: 'Laydown Yard', x: 60, z: 70, w: 70, d: 70 },
-            { id: 'hs-south', name: 'Staging Area', x: 150, z: 50, w: 100, d: 80 }
+            { name: 'Laydown Yard', pctX: 0.54, pctZ: 0.62, w: 80, d: 80 },
+            { name: 'Staging Area', pctX: 0.70, pctZ: 0.72, w: 100, d: 80 }
         ],
 
-        // Entrances (white boxes in layout.png)
+        // Entrances (white squares in layout.png)
+        // 1. Mid-property along NE edge
+        // 2. Between the two hardstand areas
         entrances: [
-            { id: 'gate-a', name: 'Main Gate', x: 250, z: 90 },
-            { id: 'gate-b', name: 'Service Entry', x: 120, z: 10 }
+            { name: 'Main Gate', pctX: 0.44, pctZ: 0.42 },
+            { name: 'Service Entry', pctX: 0.62, pctZ: 0.58 }
         ],
 
-        // Vehicle positions on hardstands
+        // Mining vehicles on the hardstands
         vehicles: [
-            { type: 'excavator', x: 50, z: 55, rot: 0.3 },
-            { type: 'truck', x: 80, z: 60, rot: -0.5 },
-            { type: 'truck', x: 110, z: 45, rot: 0.1 },
-            { type: 'dozer', x: 45, z: 80, rot: 1.2 },
-            { type: 'excavator', x: 160, z: 35, rot: -0.8 },
-            { type: 'truck', x: 190, z: 55, rot: 0.4 },
-            { type: 'dozer', x: 140, z: 75, rot: -0.2 }
+            { type: 'excavator', pctX: 0.50, pctZ: 0.60 },
+            { type: 'truck', pctX: 0.52, pctZ: 0.65 },
+            { type: 'truck', pctX: 0.56, pctZ: 0.62 },
+            { type: 'dozer', pctX: 0.48, pctZ: 0.64 },
+            { type: 'excavator', pctX: 0.68, pctZ: 0.70 },
+            { type: 'truck', pctX: 0.72, pctZ: 0.66 },
+            { type: 'dozer', pctX: 0.66, pctZ: 0.74 },
+            { type: 'truck', pctX: 0.75, pctZ: 0.74 }
         ]
     };
 
     // ═══════════════════════════════════════════════════════════════
-    // INIT
+    // INIT 3D SCENE
     // ═══════════════════════════════════════════════════════════════
 
     function initSiteModel() {
@@ -66,13 +95,12 @@
 
         // Scene
         var scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0e12);
-        scene.fog = new THREE.FogExp2(0x0a0e12, 0.0004);
+        scene.background = new THREE.Color(0x080c10);
 
-        // Camera — perspective from SE corner looking NW down the property
-        var camera = new THREE.PerspectiveCamera(45, W / H, 1, 3000);
-        camera.position.set(420, 180, 260);
-        camera.lookAt(0, 0, -50);
+        // Camera — viewing from SE corner looking NW along the property
+        var camera = new THREE.PerspectiveCamera(40, W / H, 1, 2000);
+        camera.position.set(300, 250, 280);
+        camera.lookAt(-50, 0, -30);
 
         // Renderer
         var renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false });
@@ -81,111 +109,96 @@
         renderer.shadowMap.enabled = !isMobile;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.1;
+        renderer.toneMappingExposure = 1.2;
         container.appendChild(renderer.domElement);
 
-        // ─── OrbitControls (drag to move) ─────────────────────────
-        // Three.js r128 OrbitControls loaded inline since no module system
+        // ─── Drag Controls (OrbitControls) ────────────────────────
         var controls = null;
         if (typeof THREE.OrbitControls !== 'undefined') {
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.08;
+            controls.dampingFactor = 0.07;
             controls.enableZoom = true;
-            controls.minDistance = 100;
-            controls.maxDistance = 800;
-            controls.maxPolarAngle = Math.PI / 2.2;
-            controls.minPolarAngle = 0.2;
-            controls.target.set(0, 0, -50);
+            controls.minDistance = 150;
+            controls.maxDistance = 700;
+            controls.maxPolarAngle = Math.PI / 2.3;
+            controls.minPolarAngle = 0.3;
+            controls.target.set(-50, 0, -30);
             controls.enablePan = true;
-            controls.panSpeed = 0.8;
-            controls.rotateSpeed = 0.5;
+            controls.panSpeed = 0.6;
+            controls.rotateSpeed = 0.4;
+            controls.zoomSpeed = 0.8;
             controls.update();
         }
 
         // ─── Lighting ─────────────────────────────────────────────
-        var ambient = new THREE.AmbientLight(0x3a4a5a, 0.8);
-        scene.add(ambient);
+        scene.add(new THREE.AmbientLight(0x4a5a6a, 0.7));
 
-        var sun = new THREE.DirectionalLight(0xfff0dd, 1.0);
-        sun.position.set(200, 400, -300);
+        var sun = new THREE.DirectionalLight(0xfff4e0, 0.9);
+        sun.position.set(150, 350, -200);
         sun.castShadow = !isMobile;
         if (sun.castShadow) {
             sun.shadow.mapSize.set(2048, 2048);
             sun.shadow.camera.left = -500;
             sun.shadow.camera.right = 500;
-            sun.shadow.camera.top = 200;
-            sun.shadow.camera.bottom = -200;
-            sun.shadow.camera.far = 1000;
-            sun.shadow.bias = -0.001;
+            sun.shadow.camera.top = 300;
+            sun.shadow.camera.bottom = -300;
+            sun.shadow.camera.far = 900;
+            sun.shadow.bias = -0.0005;
         }
         scene.add(sun);
 
-        var fillLight = new THREE.DirectionalLight(0x038184, 0.2);
-        fillLight.position.set(-200, 100, 200);
-        scene.add(fillLight);
+        scene.add(new THREE.HemisphereLight(0x6688aa, 0x223322, 0.3));
 
-        var hemi = new THREE.HemisphereLight(0x8899aa, 0x2a3a2a, 0.3);
-        scene.add(hemi);
+        var accentLight = new THREE.PointLight(0x038184, 0.5, 400);
+        accentLight.position.set(100, 50, 100);
+        scene.add(accentLight);
 
-        // ─── Ground (satellite-textured plane) ────────────────────
-        // Load the ChatGPT reference image as ground texture
-        var textureLoader = new THREE.TextureLoader();
-        var groundTex = textureLoader.load('workshop_reference_images/ChatGPT Image Jun 18, 2026, 05_58_44 PM.png');
+        // ─── Ground Plane (Satellite Image) ──────────────────────
+        var loader = new THREE.TextureLoader();
+        var groundTex = loader.load('workshop_reference_images/ChatGPT Image Jun 18, 2026, 05_58_44 PM.png');
         groundTex.encoding = THREE.sRGBEncoding;
+        groundTex.minFilter = THREE.LinearFilter;
+        groundTex.magFilter = THREE.LinearFilter;
 
-        var groundGeo = new THREE.PlaneGeometry(SITE.length + 200, (SITE.length + 200) * 0.56); // match image aspect ratio ~16:9
-        var groundMat = new THREE.MeshBasicMaterial({
-            map: groundTex,
-            side: THREE.FrontSide
-        });
+        var groundGeo = new THREE.PlaneGeometry(PLANE_W, PLANE_H);
+        var groundMat = new THREE.MeshBasicMaterial({ map: groundTex });
         var ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
-        ground.position.set(0, -1, 0);
+        ground.position.y = -0.5;
         scene.add(ground);
 
-        // Dark surrounding area beyond satellite image
-        var outerGeo = new THREE.PlaneGeometry(2000, 2000);
-        var outerMat = new THREE.MeshBasicMaterial({ color: 0x0a0e12 });
-        var outerGround = new THREE.Mesh(outerGeo, outerMat);
-        outerGround.rotation.x = -Math.PI / 2;
-        outerGround.position.set(0, -1.5, 0);
-        scene.add(outerGround);
-
-        // ─── Facility Group (rotated to match aerial) ─────────────
-        var facility = new THREE.Group();
-        facility.rotation.y = SITE.rotation;
-        facility.position.set(80, 0, 60);
-        scene.add(facility);
-
-        // ─── Hardstand Areas (flat concrete pads) ─────────────────
+        // ─── Hardstand Pads (semi-transparent concrete overlays) ──
         var concreteMat = new THREE.MeshStandardMaterial({
-            color: 0x8a7a6a,
-            roughness: 0.85,
-            metalness: 0.05,
+            color: 0x9a8a7a,
+            roughness: 0.9,
+            metalness: 0.0,
             transparent: true,
-            opacity: 0.7
+            opacity: 0.35
         });
 
         SITE.hardstands.forEach(function(hs) {
-            var hsGeo = new THREE.BoxGeometry(hs.w, 0.3, hs.d);
-            var hsMesh = new THREE.Mesh(hsGeo, concreteMat);
-            hsMesh.position.set(hs.x - SITE.length / 2, 0.15, hs.z - SITE.width / 2);
-            hsMesh.receiveShadow = true;
-            facility.add(hsMesh);
+            var pos = imgToWorld(hs.pctX, hs.pctZ);
+            var geo = new THREE.BoxGeometry(hs.w, 0.4, hs.d);
+            var mesh = new THREE.Mesh(geo, concreteMat);
+            mesh.position.set(pos.x, 0.2, pos.z);
+            mesh.rotation.y = PROP_ANGLE;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
         });
 
         // ─── Sheds ───────────────────────────────────────────────
         SITE.sheds.forEach(function(shed) {
+            var pos = imgToWorld(shed.pctX, shed.pctZ);
             var group = new THREE.Group();
 
             // Walls
             var wallMat = new THREE.MeshStandardMaterial({
-                color: shed.color,
-                roughness: 0.5,
+                color: 0x1a2535,
+                roughness: 0.45,
                 metalness: 0.4,
-                emissive: 0x050a12,
-                emissiveIntensity: 0.2
+                emissive: 0x0a1520,
+                emissiveIntensity: 0.3
             });
             var wallGeo = new THREE.BoxGeometry(shed.w, shed.h, shed.d);
             var walls = new THREE.Mesh(wallGeo, wallMat);
@@ -194,225 +207,218 @@
             walls.receiveShadow = true;
             group.add(walls);
 
-            // Roof
+            // Metallic roof
             var roofMat = new THREE.MeshStandardMaterial({
-                color: 0x2a3545,
-                roughness: 0.4,
-                metalness: 0.5
+                color: 0x2a3a4a,
+                roughness: 0.3,
+                metalness: 0.6
             });
-            var roofGeo = new THREE.BoxGeometry(shed.w + 2, 0.8, shed.d + 2);
+            var roofGeo = new THREE.BoxGeometry(shed.w + 1.5, 1, shed.d + 1.5);
             var roof = new THREE.Mesh(roofGeo, roofMat);
-            roof.position.y = shed.h + 0.4;
+            roof.position.y = shed.h + 0.5;
             roof.castShadow = true;
             group.add(roof);
 
-            // Roller doors (front)
-            var doorCount = Math.max(1, Math.floor(shed.w / 15));
-            var doorMat = new THREE.MeshBasicMaterial({ color: 0x060810 });
-            for (var d = 0; d < doorCount; d++) {
-                var dw = (shed.w * 0.7) / doorCount;
-                var doorGeo = new THREE.PlaneGeometry(dw, shed.h * 0.7);
-                var door = new THREE.Mesh(doorGeo, doorMat);
-                var dx = -shed.w * 0.35 + (d + 0.5) * (shed.w * 0.7 / doorCount);
-                door.position.set(dx, shed.h * 0.38, shed.d / 2 + 0.1);
-                group.add(door);
-            }
-
-            // Edge glow (accent)
-            var edgeGeo = new THREE.EdgesGeometry(wallGeo);
-            var edgeMat = new THREE.LineBasicMaterial({ color: 0x038184, transparent: true, opacity: 0.3 });
-            var edges = new THREE.LineSegments(edgeGeo, edgeMat);
+            // Subtle edge highlight
+            var edgeMat = new THREE.LineBasicMaterial({ color: 0x038184, transparent: true, opacity: 0.25 });
+            var edges = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeo), edgeMat);
             edges.position.y = shed.h / 2;
             group.add(edges);
 
-            group.position.set(shed.x - SITE.length / 2, 0, shed.z - SITE.width / 2);
-            facility.add(group);
+            // Roller doors
+            var doorCount = Math.max(1, Math.floor(Math.max(shed.w, shed.d) / 12));
+            var doorFace = shed.w > shed.d ? 'front' : 'side';
+            var doorMat = new THREE.MeshBasicMaterial({ color: 0x050508 });
+            for (var i = 0; i < doorCount; i++) {
+                var dw, dh, dx, dz;
+                dh = shed.h * 0.65;
+                if (doorFace === 'front') {
+                    dw = (shed.w * 0.6) / doorCount;
+                    dx = -shed.w * 0.3 + (i + 0.5) * (shed.w * 0.6 / doorCount);
+                    dz = shed.d / 2 + 0.1;
+                    var doorGeo = new THREE.PlaneGeometry(dw, dh);
+                    var door = new THREE.Mesh(doorGeo, doorMat);
+                    door.position.set(dx, dh / 2 + 0.5, dz);
+                    group.add(door);
+                } else {
+                    dw = (shed.d * 0.6) / doorCount;
+                    dz = -shed.d * 0.3 + (i + 0.5) * (shed.d * 0.6 / doorCount);
+                    dx = shed.w / 2 + 0.1;
+                    var doorGeo2 = new THREE.PlaneGeometry(dw, dh);
+                    var door2 = new THREE.Mesh(doorGeo2, doorMat);
+                    door2.position.set(dx, dh / 2 + 0.5, dz);
+                    door2.rotation.y = Math.PI / 2;
+                    group.add(door2);
+                }
+            }
+
+            group.position.set(pos.x, 0, pos.z);
+            group.rotation.y = PROP_ANGLE;
+            scene.add(group);
         });
 
-        // ─── Mining Vehicles (simple block representations) ───────
-        var vehicleColors = {
-            excavator: 0xd4a017,
-            truck: 0xd4a017,
-            dozer: 0xd4a017
-        };
-
+        // ─── Mining Vehicles ──────────────────────────────────────
         SITE.vehicles.forEach(function(v) {
+            var pos = imgToWorld(v.pctX, v.pctZ);
             var vGroup = new THREE.Group();
+            var catYellow = 0xd4a020;
+            var darkMetal = 0x1a1a1a;
 
             if (v.type === 'excavator') {
-                // Body
-                var bodyGeo = new THREE.BoxGeometry(8, 4, 5);
-                var bodyMat = new THREE.MeshStandardMaterial({ color: vehicleColors.excavator, roughness: 0.6, metalness: 0.3 });
-                var body = new THREE.Mesh(bodyGeo, bodyMat);
-                body.position.y = 3;
+                var body = new THREE.Mesh(
+                    new THREE.BoxGeometry(6, 3, 4),
+                    new THREE.MeshStandardMaterial({ color: catYellow, roughness: 0.6, metalness: 0.3 })
+                );
+                body.position.y = 2.5;
                 body.castShadow = true;
                 vGroup.add(body);
-                // Tracks
-                var trackMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
-                for (var side = -1; side <= 1; side += 2) {
-                    var tGeo = new THREE.BoxGeometry(10, 2, 2);
-                    var track = new THREE.Mesh(tGeo, trackMat);
-                    track.position.set(0, 1, side * 3);
-                    track.castShadow = true;
-                    vGroup.add(track);
+                for (var s = -1; s <= 1; s += 2) {
+                    var trk = new THREE.Mesh(
+                        new THREE.BoxGeometry(7, 1.5, 1.5),
+                        new THREE.MeshStandardMaterial({ color: darkMetal, roughness: 0.9 })
+                    );
+                    trk.position.set(0, 0.75, s * 2.2);
+                    vGroup.add(trk);
                 }
-                // Cab
-                var cabGeo = new THREE.BoxGeometry(3, 3, 3);
-                var cabMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.3, metalness: 0.5 });
-                var cab = new THREE.Mesh(cabGeo, cabMat);
-                cab.position.set(-1, 6, 0);
+                var cab = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.5, 2.5, 2.5),
+                    new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.3, metalness: 0.5 })
+                );
+                cab.position.set(-0.5, 5, 0);
                 vGroup.add(cab);
             } else if (v.type === 'truck') {
-                // Tray
-                var trayGeo = new THREE.BoxGeometry(12, 4, 6);
-                var trayMat = new THREE.MeshStandardMaterial({ color: vehicleColors.truck, roughness: 0.6, metalness: 0.3 });
-                var tray = new THREE.Mesh(trayGeo, trayMat);
-                tray.position.set(2, 4, 0);
+                var tray = new THREE.Mesh(
+                    new THREE.BoxGeometry(9, 3, 5),
+                    new THREE.MeshStandardMaterial({ color: catYellow, roughness: 0.6, metalness: 0.3 })
+                );
+                tray.position.set(1.5, 3, 0);
                 tray.castShadow = true;
                 vGroup.add(tray);
-                // Cab
-                var tcGeo = new THREE.BoxGeometry(4, 4, 5);
-                var tcMat = new THREE.MeshStandardMaterial({ color: 0x1a1a20, roughness: 0.4, metalness: 0.4 });
-                var tc = new THREE.Mesh(tcGeo, tcMat);
-                tc.position.set(-5, 4, 0);
-                vGroup.add(tc);
-                // Wheels
-                var wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-                var wheelGeo = new THREE.CylinderGeometry(2, 2, 1.5, 8);
-                for (var wx = -4; wx <= 4; wx += 4) {
-                    for (var wz = -1; wz <= 1; wz += 2) {
-                        var wheel = new THREE.Mesh(wheelGeo, wheelMat);
-                        wheel.rotation.x = Math.PI / 2;
-                        wheel.position.set(wx, 2, wz * 3.5);
-                        vGroup.add(wheel);
-                    }
-                }
-            } else { // dozer
-                var dzGeo = new THREE.BoxGeometry(7, 3, 5);
-                var dzMat = new THREE.MeshStandardMaterial({ color: vehicleColors.dozer, roughness: 0.6, metalness: 0.3 });
-                var dz = new THREE.Mesh(dzGeo, dzMat);
-                dz.position.y = 2.5;
-                dz.castShadow = true;
-                vGroup.add(dz);
-                // Blade
-                var bladeGeo = new THREE.BoxGeometry(0.8, 3, 7);
-                var bladeMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.6 });
-                var blade = new THREE.Mesh(bladeGeo, bladeMat);
-                blade.position.set(4.5, 1.5, 0);
+                var tcab = new THREE.Mesh(
+                    new THREE.BoxGeometry(3.5, 3, 4),
+                    new THREE.MeshStandardMaterial({ color: 0x1a1a20, roughness: 0.4, metalness: 0.4 })
+                );
+                tcab.position.set(-4, 3, 0);
+                vGroup.add(tcab);
+                var wheelGeo = new THREE.CylinderGeometry(1.5, 1.5, 1, 8);
+                var wheelMat = new THREE.MeshStandardMaterial({ color: darkMetal, roughness: 0.9 });
+                [[-3, -2.8], [-3, 2.8], [3, -2.8], [3, 2.8]].forEach(function(wp) {
+                    var wh = new THREE.Mesh(wheelGeo, wheelMat);
+                    wh.rotation.x = Math.PI / 2;
+                    wh.position.set(wp[0], 1.5, wp[1]);
+                    vGroup.add(wh);
+                });
+            } else {
+                var dzBody = new THREE.Mesh(
+                    new THREE.BoxGeometry(5.5, 2.5, 4),
+                    new THREE.MeshStandardMaterial({ color: catYellow, roughness: 0.6, metalness: 0.3 })
+                );
+                dzBody.position.y = 2;
+                dzBody.castShadow = true;
+                vGroup.add(dzBody);
+                var blade = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.6, 2.5, 5.5),
+                    new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.6 })
+                );
+                blade.position.set(3.5, 1.2, 0);
                 vGroup.add(blade);
-                // Tracks
                 for (var ds = -1; ds <= 1; ds += 2) {
-                    var dtGeo = new THREE.BoxGeometry(8, 1.8, 1.5);
-                    var dt = new THREE.Mesh(dtGeo, new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 }));
-                    dt.position.set(0, 0.9, ds * 2.5);
+                    var dt = new THREE.Mesh(
+                        new THREE.BoxGeometry(6, 1.2, 1.2),
+                        new THREE.MeshStandardMaterial({ color: darkMetal, roughness: 0.9 })
+                    );
+                    dt.position.set(0, 0.6, ds * 2);
                     vGroup.add(dt);
                 }
             }
 
-            vGroup.position.set(v.x - SITE.length / 2, 0, v.z - SITE.width / 2);
-            vGroup.rotation.y = v.rot;
-            vGroup.scale.setScalar(0.6);
-            facility.add(vGroup);
+            vGroup.position.set(pos.x, 0.5, pos.z);
+            vGroup.rotation.y = PROP_ANGLE + (Math.random() - 0.5) * 0.6;
+            vGroup.scale.setScalar(0.7);
+            scene.add(vGroup);
         });
 
-        // ─── Entrances (gate markers) ─────────────────────────────
-        var gateMat = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            roughness: 0.3,
-            metalness: 0.1,
-            emissive: 0x038184,
-            emissiveIntensity: 0.4
-        });
-
+        // ─── Entrance Gates ──────────────────────────────────────
         SITE.entrances.forEach(function(gate) {
-            var gateGroup = new THREE.Group();
+            var pos = imgToWorld(gate.pctX, gate.pctZ);
+            var gGroup = new THREE.Group();
 
-            // Gate posts
-            for (var gs = -1; gs <= 1; gs += 2) {
-                var postGeo = new THREE.CylinderGeometry(0.4, 0.4, 6, 8);
-                var post = new THREE.Mesh(postGeo, gateMat);
-                post.position.set(gs * 4, 3, 0);
+            // White posts
+            var postMat = new THREE.MeshStandardMaterial({
+                color: 0xe8e8e8,
+                roughness: 0.3,
+                metalness: 0.1,
+                emissive: 0x038184,
+                emissiveIntensity: 0.15
+            });
+            for (var p = -1; p <= 1; p += 2) {
+                var post = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 5, 8), postMat);
+                post.position.set(p * 5, 2.5, 0);
                 post.castShadow = true;
-                gateGroup.add(post);
+                gGroup.add(post);
             }
 
             // Crossbar
-            var barGeo = new THREE.BoxGeometry(9, 0.6, 0.6);
-            var bar = new THREE.Mesh(barGeo, gateMat);
-            bar.position.y = 6;
-            gateGroup.add(bar);
+            var bar = new THREE.Mesh(new THREE.BoxGeometry(11, 0.5, 0.5), postMat);
+            bar.position.y = 5;
+            gGroup.add(bar);
 
-            // Ground marker (glowing ring)
-            var ringGeo = new THREE.RingGeometry(5, 6, 24);
-            var ringMat = new THREE.MeshBasicMaterial({ color: 0x038184, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
+            // Ground ring glow
+            var ringGeo = new THREE.RingGeometry(6, 7, 32);
+            var ringMat = new THREE.MeshBasicMaterial({
+                color: 0x038184,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
             var ring = new THREE.Mesh(ringGeo, ringMat);
             ring.rotation.x = -Math.PI / 2;
-            ring.position.y = 0.2;
-            gateGroup.add(ring);
+            ring.position.y = 0.3;
+            gGroup.add(ring);
 
-            gateGroup.position.set(gate.x - SITE.length / 2, 0, gate.z - SITE.width / 2);
-            facility.add(gateGroup);
+            gGroup.position.set(pos.x, 0, pos.z);
+            gGroup.rotation.y = PROP_ANGLE;
+            scene.add(gGroup);
         });
 
-        // ─── Glowing Boundary Outline ─────────────────────────────
-        // A slightly elevated cyan perimeter line around the facility zone
-        var bndPts = [
-            new THREE.Vector3(-SITE.length / 2 - 5, 1, -SITE.width / 2 - 5),
-            new THREE.Vector3(SITE.length / 2 + 5, 1, -SITE.width / 2 - 5),
-            new THREE.Vector3(SITE.length / 2 + 5, 1, SITE.width / 2 + 5),
-            new THREE.Vector3(-SITE.length / 2 - 5, 1, SITE.width / 2 + 5),
-            new THREE.Vector3(-SITE.length / 2 - 5, 1, -SITE.width / 2 - 5)
-        ];
-        var bndGeo = new THREE.BufferGeometry().setFromPoints(bndPts);
-        var bndMat = new THREE.LineBasicMaterial({ color: 0x038184, linewidth: 2 });
-        var bndLine = new THREE.Line(bndGeo, bndMat);
-        facility.add(bndLine);
-
-        // Glowing boundary tubes
-        var tubeCurve = new THREE.CatmullRomCurve3(bndPts, false);
-        var tubeGeo = new THREE.TubeGeometry(tubeCurve, 100, 0.6, 4, false);
-        var tubeMat = new THREE.MeshBasicMaterial({ color: 0x038184, transparent: true, opacity: 0.5 });
-        var tube = new THREE.Mesh(tubeGeo, tubeMat);
-        facility.add(tube);
-
-        // ─── Atmosphere Particles ─────────────────────────────────
+        // ─── Atmosphere ───────────────────────────────────────────
         if (!isMobile) {
-            var pCount = 200;
-            var pGeo = new THREE.BufferGeometry();
-            var pPos = new Float32Array(pCount * 3);
-            for (var i = 0; i < pCount; i++) {
-                pPos[i * 3] = (Math.random() - 0.5) * 800;
-                pPos[i * 3 + 1] = Math.random() * 100 + 5;
-                pPos[i * 3 + 2] = (Math.random() - 0.5) * 400;
+            var dustCount = 150;
+            var dustGeo = new THREE.BufferGeometry();
+            var dustPos = new Float32Array(dustCount * 3);
+            for (var i = 0; i < dustCount; i++) {
+                dustPos[i * 3] = (Math.random() - 0.5) * 600;
+                dustPos[i * 3 + 1] = Math.random() * 60 + 3;
+                dustPos[i * 3 + 2] = (Math.random() - 0.5) * 400;
             }
-            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-            var pMat = new THREE.PointsMaterial({ color: 0x038184, size: 1.2, transparent: true, opacity: 0.3 });
-            var particles = new THREE.Points(pGeo, pMat);
-            scene.add(particles);
+            dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+            var dustMat = new THREE.PointsMaterial({
+                color: 0x038184,
+                size: 1.0,
+                transparent: true,
+                opacity: 0.25
+            });
+            scene.add(new THREE.Points(dustGeo, dustMat));
         }
 
         // ═══════════════════════════════════════════════════════════
-        // RENDER LOOP + OPTIMISATION
+        // RENDER LOOP
         // ═══════════════════════════════════════════════════════════
 
-        var siteVisible = false;
+        var visible = false;
         var observer = new IntersectionObserver(function(entries) {
-            siteVisible = entries[0].isIntersecting;
+            visible = entries[0].isIntersecting;
         }, { rootMargin: '200px' });
         observer.observe(container);
 
         var frame = 0;
         function animate() {
             requestAnimationFrame(animate);
-            if (!siteVisible) return;
+            if (!visible) return;
             frame++;
             if (isMobile && frame % 2 !== 0) return;
 
             if (controls) controls.update();
-
-            // Pulse boundary
-            tubeMat.opacity = 0.3 + Math.sin(frame * 0.025) * 0.15;
-
             renderer.render(scene, camera);
         }
         animate();
