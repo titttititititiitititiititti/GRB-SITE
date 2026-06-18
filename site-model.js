@@ -156,7 +156,7 @@
 
         // ─── Ground Plane (Satellite Image) ──────────────────────
         var loader = new THREE.TextureLoader();
-        var groundTex = loader.load('workshop_reference_images/ChatGPT Image Jun 18, 2026, 05_58_44 PM.png');
+        var groundTex = loader.load('workshop_reference_images/facility-aerial.png');
         groundTex.encoding = THREE.sRGBEncoding;
         groundTex.minFilter = THREE.LinearFilter;
         groundTex.magFilter = THREE.LinearFilter;
