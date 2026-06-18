@@ -156,7 +156,7 @@
 
         // ─── Ground Plane (Satellite Image) ──────────────────────
         var loader = new THREE.TextureLoader();
-        var groundTex = loader.load('workshop_reference_images/facility-aerial.png');
+        var groundTex = loader.load('workshop_reference_images/background.png');
         groundTex.encoding = THREE.sRGBEncoding;
         groundTex.minFilter = THREE.LinearFilter;
         groundTex.magFilter = THREE.LinearFilter;
