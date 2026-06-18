@@ -1,178 +1,59 @@
 /* ======================================================
    GRB Mining — 3D Site Model (Facility Layout)
-   Three.js interactive site plan with scroll-driven camera
+   Three.js interactive site plan with satellite imagery base
 ====================================================== */
 
 (function () {
     'use strict';
 
     // ═══════════════════════════════════════════════════════════════
-    // STAGE 1 — SITE DATA MODEL
-    // All dimensions in metres. Coordinate system:
-    //   X = along long axis (NW=0 to SE=700)
-    //   Z = across width (SW/Highway=0 to NE/Rail=180)
-    //   Y = height (up)
-    // The property runs at ~45 degrees to cardinal north.
+    // SITE DATA MODEL
+    // The property runs at ~45 degrees NW-SE.
+    // We place the textured ground plane at this angle.
+    // Coordinates: X across, Z along length, Y up.
+    // Origin at center of property for simplicity.
     // ═══════════════════════════════════════════════════════════════
 
-    var SITE_PLAN = {
-        units: 'metres',
+    var SITE = {
+        // Property dimensions (metres)
+        length: 700,
+        width: 180,
+        rotation: -0.78, // ~45 degrees to match aerial
 
-        // Property boundary — parallelogram with slight skew
-        // Points ordered clockwise from NW corner
-        boundary: [
-            [0, 20],       // NW corner (offset from highway)
-            [680, 0],      // NE corner (slight skew toward highway at SE end)
-            [700, 160],    // SE corner
-            [20, 180]      // SW corner
-        ],
-
-        // Bruce Highway — runs along the SW edge (low Z values)
-        highway: {
-            name: 'Bruce Highway',
-            // Centerline polyline (simplified)
-            centerLine: [[-30, -5], [730, -25]],
-            width: 22
-        },
-
-        // Rail corridor — runs along the NE edge (high Z values)
-        rail: {
-            name: 'Rail Corridor',
-            centerLine: [[-20, 192], [720, 172]],
-            width: 6
-        },
-
-        // Three sheds with real dimensions
+        // Sheds (blue in layout.png) - positions relative to SE end
         sheds: [
-            {
-                id: 'shed-small',
-                name: 'Storage Shed',
-                // position = center of footprint [x, y, z]
-                position: [420, 0, 95],
-                // size = [width(X), height(Y), depth(Z)]
-                size: [12, 5, 12],
-                rotationY: 0.05
-            },
-            {
-                id: 'shed-main',
-                name: 'Main Workshop',
-                position: [530, 0, 120],
-                size: [75, 18, 18],
-                rotationY: 0.05
-            },
-            {
-                id: 'shed-perp',
-                name: 'Equipment Bay',
-                position: [620, 0, 70],
-                size: [25, 5, 10],
-                rotationY: 0.05
-            }
+            { id: 'shed-a', name: 'Equipment Bay', x: 80, z: 45, w: 60, d: 60, h: 12, color: 0x1a2a40 },
+            { id: 'shed-b', name: 'Main Workshop', x: 150, z: 70, w: 80, d: 20, h: 14, color: 0x1a2a40 },
+            { id: 'shed-c', name: 'Parts Store', x: 180, z: 30, w: 45, d: 18, h: 10, color: 0x1a2a40 },
+            { id: 'shed-small', name: 'Storage', x: 100, z: 80, w: 12, d: 12, h: 5, color: 0x1a2a40 }
         ],
 
-        // Concrete hardstand / laydown areas
+        // Concrete hardstand (red in layout.png) - flat paved areas
         hardstands: [
-            {
-                id: 'hs-main',
-                name: 'Main Hardstand',
-                points: [[440, 60], [600, 55], [600, 155], [440, 160]]
-            },
-            {
-                id: 'hs-south',
-                name: 'Southern Pad',
-                points: [[580, 40], [690, 35], [690, 145], [580, 150]]
-            }
+            { id: 'hs-north', name: 'Laydown Yard', x: 60, z: 70, w: 70, d: 70 },
+            { id: 'hs-south', name: 'Staging Area', x: 150, z: 50, w: 100, d: 80 }
         ],
 
-        // Vegetation/scrub zone (NW two-thirds of property)
-        vegetation: {
-            zone: [[5, 25], [430, 15], [430, 170], [5, 175]],
-            density: 120
-        },
+        // Entrances (white boxes in layout.png)
+        entrances: [
+            { id: 'gate-a', name: 'Main Gate', x: 250, z: 90 },
+            { id: 'gate-b', name: 'Service Entry', x: 120, z: 10 }
+        ],
 
-        // Site entry points (gates)
-        entries: [
-            { position: [350, 85], label: 'Entry A' },
-            { position: [560, 65], label: 'Entry B' }
+        // Vehicle positions on hardstands
+        vehicles: [
+            { type: 'excavator', x: 50, z: 55, rot: 0.3 },
+            { type: 'truck', x: 80, z: 60, rot: -0.5 },
+            { type: 'truck', x: 110, z: 45, rot: 0.1 },
+            { type: 'dozer', x: 45, z: 80, rot: 1.2 },
+            { type: 'excavator', x: 160, z: 35, rot: -0.8 },
+            { type: 'truck', x: 190, z: 55, rot: 0.4 },
+            { type: 'dozer', x: 140, z: 75, rot: -0.2 }
         ]
     };
 
     // ═══════════════════════════════════════════════════════════════
-    // STAGE 2 — 2D DEBUG VIEW
-    // Toggled via ?debug=site in URL
-    // ═══════════════════════════════════════════════════════════════
-
-    function buildDebugView() {
-        if (window.location.search.indexOf('debug=site') === -1) return;
-
-        var scale = 0.8;
-        var padX = 60, padZ = 40;
-        var svgW = 700 * scale + padX * 2;
-        var svgH = 200 * scale + padZ * 2;
-
-        function tx(x) { return x * scale + padX; }
-        function tz(z) { return z * scale + padZ; }
-        function polyStr(pts) {
-            return pts.map(function(p) { return tx(p[0]) + ',' + tz(p[1]); }).join(' ');
-        }
-
-        var svg = '<svg width="' + svgW + '" height="' + svgH + '" xmlns="http://www.w3.org/2000/svg" style="background:#111">';
-
-        // Highway
-        var hw = SITE_PLAN.highway;
-        svg += '<line x1="' + tx(hw.centerLine[0][0]) + '" y1="' + tz(hw.centerLine[0][1]) + '" x2="' + tx(hw.centerLine[1][0]) + '" y2="' + tz(hw.centerLine[1][1]) + '" stroke="#444" stroke-width="' + (hw.width * scale) + '" stroke-linecap="round"/>';
-        svg += '<text x="' + tx(350) + '" y="' + tz(-8) + '" fill="#666" font-size="10" text-anchor="middle">BRUCE HIGHWAY</text>';
-
-        // Rail
-        var rl = SITE_PLAN.rail;
-        svg += '<line x1="' + tx(rl.centerLine[0][0]) + '" y1="' + tz(rl.centerLine[0][1]) + '" x2="' + tx(rl.centerLine[1][0]) + '" y2="' + tz(rl.centerLine[1][1]) + '" stroke="#6b3e1a" stroke-width="' + (rl.width * scale) + '"/>';
-        svg += '<text x="' + tx(350) + '" y="' + tz(195) + '" fill="#6b3e1a" font-size="10" text-anchor="middle">RAIL CORRIDOR</text>';
-
-        // Vegetation
-        svg += '<polygon points="' + polyStr(SITE_PLAN.vegetation.zone) + '" fill="rgba(30,90,30,0.3)" stroke="rgba(30,90,30,0.6)" stroke-width="1"/>';
-
-        // Hardstands
-        SITE_PLAN.hardstands.forEach(function(hs) {
-            svg += '<polygon points="' + polyStr(hs.points) + '" fill="rgba(200,60,60,0.25)" stroke="rgba(200,60,60,0.7)" stroke-width="1"/>';
-            var cx = hs.points.reduce(function(s, p) { return s + p[0]; }, 0) / hs.points.length;
-            var cz = hs.points.reduce(function(s, p) { return s + p[1]; }, 0) / hs.points.length;
-            svg += '<text x="' + tx(cx) + '" y="' + tz(cz) + '" fill="#c44" font-size="8" text-anchor="middle">' + hs.name + '</text>';
-        });
-
-        // Boundary
-        svg += '<polygon points="' + polyStr(SITE_PLAN.boundary) + '" fill="none" stroke="#f0f" stroke-width="2" stroke-dasharray="6,3"/>';
-
-        // Sheds
-        SITE_PLAN.sheds.forEach(function(shed) {
-            var x = shed.position[0] - shed.size[0] / 2;
-            var z = shed.position[2] - shed.size[2] / 2;
-            svg += '<rect x="' + tx(x) + '" y="' + tz(z) + '" width="' + (shed.size[0] * scale) + '" height="' + (shed.size[2] * scale) + '" fill="rgba(50,80,200,0.5)" stroke="rgba(50,80,200,0.9)" stroke-width="1.5"/>';
-            svg += '<text x="' + tx(shed.position[0]) + '" y="' + tz(shed.position[2]) + '" fill="#8af" font-size="7" text-anchor="middle" dominant-baseline="middle">' + shed.name + ' (' + shed.size[0] + 'x' + shed.size[2] + 'm)</text>';
-        });
-
-        // Entries
-        SITE_PLAN.entries.forEach(function(e) {
-            svg += '<circle cx="' + tx(e.position[0]) + '" cy="' + tz(e.position[1]) + '" r="4" fill="#ff0" stroke="#aa0" stroke-width="1"/>';
-            svg += '<text x="' + tx(e.position[0] + 8) + '" y="' + tz(e.position[1]) + '" fill="#ff0" font-size="7">' + e.label + '</text>';
-        });
-
-        // Scale bar
-        var sbX = tx(600), sbY = tz(180);
-        svg += '<line x1="' + sbX + '" y1="' + sbY + '" x2="' + (sbX + 100 * scale) + '" y2="' + sbY + '" stroke="#fff" stroke-width="1.5"/>';
-        svg += '<text x="' + sbX + '" y="' + (sbY + 12) + '" fill="#fff" font-size="9">0</text>';
-        svg += '<text x="' + (sbX + 50 * scale) + '" y="' + (sbY + 12) + '" fill="#fff" font-size="9" text-anchor="middle">50m</text>';
-        svg += '<text x="' + (sbX + 100 * scale) + '" y="' + (sbY + 12) + '" fill="#fff" font-size="9" text-anchor="end">100m</text>';
-
-        svg += '</svg>';
-
-        var debugDiv = document.createElement('div');
-        debugDiv.id = 'site-debug';
-        debugDiv.style.cssText = 'position:fixed;top:10px;left:10px;z-index:99999;border:1px solid #333;border-radius:8px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.8);';
-        debugDiv.innerHTML = '<div style="padding:6px 12px;background:#222;color:#0f0;font:11px monospace;">SITE PLAN DEBUG — coordinates in metres</div>' + svg;
-        document.body.appendChild(debugDiv);
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // STAGE 3 + 4 + 5 + 6 + 7 — 3D SCENE (combined)
+    // INIT
     // ═══════════════════════════════════════════════════════════════
 
     function initSiteModel() {
@@ -180,321 +61,363 @@
         if (!container) return;
 
         var isMobile = window.innerWidth <= 768;
+        var W = container.clientWidth;
+        var H = container.clientHeight;
 
-        // Scene setup
+        // Scene
         var scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x0a0a0f, 0.0008);
+        scene.background = new THREE.Color(0x0a0e12);
+        scene.fog = new THREE.FogExp2(0x0a0e12, 0.0004);
 
-        var camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 1, 2000);
-        camera.position.set(350, 400, -100);
-        camera.lookAt(450, 0, 90);
+        // Camera — perspective from SE corner looking NW down the property
+        var camera = new THREE.PerspectiveCamera(45, W / H, 1, 3000);
+        camera.position.set(420, 180, 260);
+        camera.lookAt(0, 0, -50);
 
+        // Renderer
         var renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: false });
-        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setSize(W, H);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
-        renderer.setClearColor(0x0a0a0f, 1);
         renderer.shadowMap.enabled = !isMobile;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.1;
         container.appendChild(renderer.domElement);
 
+        // ─── OrbitControls (drag to move) ─────────────────────────
+        // Three.js r128 OrbitControls loaded inline since no module system
+        var controls = null;
+        if (typeof THREE.OrbitControls !== 'undefined') {
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.08;
+            controls.enableZoom = true;
+            controls.minDistance = 100;
+            controls.maxDistance = 800;
+            controls.maxPolarAngle = Math.PI / 2.2;
+            controls.minPolarAngle = 0.2;
+            controls.target.set(0, 0, -50);
+            controls.enablePan = true;
+            controls.panSpeed = 0.8;
+            controls.rotateSpeed = 0.5;
+            controls.update();
+        }
+
         // ─── Lighting ─────────────────────────────────────────────
-        var ambient = new THREE.AmbientLight(0x1a2030, 0.6);
+        var ambient = new THREE.AmbientLight(0x3a4a5a, 0.8);
         scene.add(ambient);
 
-        var sun = new THREE.DirectionalLight(0xffeedd, 0.8);
-        sun.position.set(200, 300, -100);
+        var sun = new THREE.DirectionalLight(0xfff0dd, 1.0);
+        sun.position.set(200, 400, -300);
         sun.castShadow = !isMobile;
         if (sun.castShadow) {
-            sun.shadow.mapSize.set(1024, 1024);
-            sun.shadow.camera.left = -400;
-            sun.shadow.camera.right = 400;
+            sun.shadow.mapSize.set(2048, 2048);
+            sun.shadow.camera.left = -500;
+            sun.shadow.camera.right = 500;
             sun.shadow.camera.top = 200;
             sun.shadow.camera.bottom = -200;
-            sun.shadow.camera.far = 800;
+            sun.shadow.camera.far = 1000;
+            sun.shadow.bias = -0.001;
         }
         scene.add(sun);
 
-        var fillLight = new THREE.DirectionalLight(0x038184, 0.3);
-        fillLight.position.set(-100, 100, 200);
+        var fillLight = new THREE.DirectionalLight(0x038184, 0.2);
+        fillLight.position.set(-200, 100, 200);
         scene.add(fillLight);
 
-        // ─── Ground Plane ─────────────────────────────────────────
-        var groundGeo = new THREE.PlaneGeometry(900, 300);
-        var groundMat = new THREE.MeshStandardMaterial({
-            color: 0x1a1e14,
-            roughness: 0.95,
-            metalness: 0.0
+        var hemi = new THREE.HemisphereLight(0x8899aa, 0x2a3a2a, 0.3);
+        scene.add(hemi);
+
+        // ─── Ground (satellite-textured plane) ────────────────────
+        // Load the ChatGPT reference image as ground texture
+        var textureLoader = new THREE.TextureLoader();
+        var groundTex = textureLoader.load('workshop_reference_images/ChatGPT Image Jun 18, 2026, 05_58_44 PM.png');
+        groundTex.encoding = THREE.sRGBEncoding;
+
+        var groundGeo = new THREE.PlaneGeometry(SITE.length + 200, (SITE.length + 200) * 0.56); // match image aspect ratio ~16:9
+        var groundMat = new THREE.MeshBasicMaterial({
+            map: groundTex,
+            side: THREE.FrontSide
         });
         var ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
-        ground.position.set(350, -0.5, 90);
-        ground.receiveShadow = true;
+        ground.position.set(0, -1, 0);
         scene.add(ground);
 
-        // ─── Property Boundary (glowing cyan line) ────────────────
-        var boundaryPts = SITE_PLAN.boundary.map(function(p) {
-            return new THREE.Vector3(p[0], 0.5, p[1]);
-        });
-        boundaryPts.push(boundaryPts[0].clone());
+        // Dark surrounding area beyond satellite image
+        var outerGeo = new THREE.PlaneGeometry(2000, 2000);
+        var outerMat = new THREE.MeshBasicMaterial({ color: 0x0a0e12 });
+        var outerGround = new THREE.Mesh(outerGeo, outerMat);
+        outerGround.rotation.x = -Math.PI / 2;
+        outerGround.position.set(0, -1.5, 0);
+        scene.add(outerGround);
 
-        var boundaryGeo = new THREE.BufferGeometry().setFromPoints(boundaryPts);
-        var boundaryMat = new THREE.LineBasicMaterial({
-            color: 0x038184,
-            linewidth: 2
-        });
-        var boundaryLine = new THREE.Line(boundaryGeo, boundaryMat);
-        scene.add(boundaryLine);
+        // ─── Facility Group (rotated to match aerial) ─────────────
+        var facility = new THREE.Group();
+        facility.rotation.y = SITE.rotation;
+        facility.position.set(80, 0, 60);
+        scene.add(facility);
 
-        // Glowing boundary tube for visual impact
-        var boundaryCurve = new THREE.CatmullRomCurve3(boundaryPts, false);
-        var tubeGeo = new THREE.TubeGeometry(boundaryCurve, 80, 0.8, 6, false);
-        var tubeMat = new THREE.MeshBasicMaterial({
-            color: 0x038184,
-            transparent: true,
-            opacity: 0.6
-        });
-        var boundaryTube = new THREE.Mesh(tubeGeo, tubeMat);
-        scene.add(boundaryTube);
-
-        // ─── Highway ──────────────────────────────────────────────
-        var hwData = SITE_PLAN.highway;
-        var hwGeo = new THREE.PlaneGeometry(760, hwData.width);
-        var hwMat = new THREE.MeshStandardMaterial({
-            color: 0x2a2a2e,
+        // ─── Hardstand Areas (flat concrete pads) ─────────────────
+        var concreteMat = new THREE.MeshStandardMaterial({
+            color: 0x8a7a6a,
             roughness: 0.85,
-            metalness: 0.05
-        });
-        var highway = new THREE.Mesh(hwGeo, hwMat);
-        highway.rotation.x = -Math.PI / 2;
-        highway.rotation.z = Math.atan2(
-            hwData.centerLine[1][1] - hwData.centerLine[0][1],
-            hwData.centerLine[1][0] - hwData.centerLine[0][0]
-        );
-        highway.position.set(350, -0.3, -15);
-        highway.receiveShadow = true;
-        scene.add(highway);
-
-        // Highway center line markings
-        var clGeo = new THREE.PlaneGeometry(740, 0.5);
-        var clMat = new THREE.MeshBasicMaterial({ color: 0xffff88 });
-        var centerLine = new THREE.Mesh(clGeo, clMat);
-        centerLine.rotation.x = -Math.PI / 2;
-        centerLine.position.set(350, -0.1, -15);
-        scene.add(centerLine);
-
-        // ─── Rail Corridor ────────────────────────────────────────
-        var rlData = SITE_PLAN.rail;
-        var rlGeo = new THREE.PlaneGeometry(760, rlData.width);
-        var rlMat = new THREE.MeshStandardMaterial({
-            color: 0x3d2816,
-            roughness: 0.9,
-            metalness: 0.2
-        });
-        var rail = new THREE.Mesh(rlGeo, rlMat);
-        rail.rotation.x = -Math.PI / 2;
-        rail.position.set(350, -0.3, 182);
-        rail.receiveShadow = true;
-        scene.add(rail);
-
-        // Rail tracks (two parallel lines)
-        for (var ri = -1; ri <= 1; ri += 2) {
-            var trackGeo = new THREE.PlaneGeometry(740, 0.3);
-            var trackMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
-            var track = new THREE.Mesh(trackGeo, trackMat);
-            track.rotation.x = -Math.PI / 2;
-            track.position.set(350, -0.1, 182 + ri * 1.5);
-            scene.add(track);
-        }
-
-        // ─── Hardstand Areas ──────────────────────────────────────
-        var hsMat = new THREE.MeshStandardMaterial({
-            color: 0x4a4a50,
-            roughness: 0.75,
-            metalness: 0.1
+            metalness: 0.05,
+            transparent: true,
+            opacity: 0.7
         });
 
-        SITE_PLAN.hardstands.forEach(function(hs) {
-            var shape = new THREE.Shape();
-            shape.moveTo(hs.points[0][0], hs.points[0][1]);
-            for (var i = 1; i < hs.points.length; i++) {
-                shape.lineTo(hs.points[i][0], hs.points[i][1]);
-            }
-            shape.closePath();
-
-            var extGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.3, bevelEnabled: false });
-            var hsMesh = new THREE.Mesh(extGeo, hsMat);
-            hsMesh.rotation.x = -Math.PI / 2;
-            hsMesh.position.y = 0;
+        SITE.hardstands.forEach(function(hs) {
+            var hsGeo = new THREE.BoxGeometry(hs.w, 0.3, hs.d);
+            var hsMesh = new THREE.Mesh(hsGeo, concreteMat);
+            hsMesh.position.set(hs.x - SITE.length / 2, 0.15, hs.z - SITE.width / 2);
             hsMesh.receiveShadow = true;
-            scene.add(hsMesh);
+            facility.add(hsMesh);
         });
 
         // ─── Sheds ───────────────────────────────────────────────
-        var shedBodyMat = new THREE.MeshStandardMaterial({
-            color: 0x1a2030,
-            roughness: 0.6,
-            metalness: 0.3
-        });
-        var shedRoofMat = new THREE.MeshStandardMaterial({
-            color: 0x252e3a,
-            roughness: 0.5,
-            metalness: 0.4
-        });
-
-        SITE_PLAN.sheds.forEach(function(shed) {
+        SITE.sheds.forEach(function(shed) {
             var group = new THREE.Group();
 
-            // Main body
-            var bodyGeo = new THREE.BoxGeometry(shed.size[0], shed.size[1] * 0.85, shed.size[2]);
-            var body = new THREE.Mesh(bodyGeo, shedBodyMat);
-            body.position.y = shed.size[1] * 0.425;
-            body.castShadow = true;
-            body.receiveShadow = true;
-            group.add(body);
+            // Walls
+            var wallMat = new THREE.MeshStandardMaterial({
+                color: shed.color,
+                roughness: 0.5,
+                metalness: 0.4,
+                emissive: 0x050a12,
+                emissiveIntensity: 0.2
+            });
+            var wallGeo = new THREE.BoxGeometry(shed.w, shed.h, shed.d);
+            var walls = new THREE.Mesh(wallGeo, wallMat);
+            walls.position.y = shed.h / 2;
+            walls.castShadow = true;
+            walls.receiveShadow = true;
+            group.add(walls);
 
-            // Roof (slightly wider)
-            var roofGeo = new THREE.BoxGeometry(shed.size[0] + 1, shed.size[1] * 0.15, shed.size[2] + 1);
-            var roof = new THREE.Mesh(roofGeo, shedRoofMat);
-            roof.position.y = shed.size[1] * 0.925;
+            // Roof
+            var roofMat = new THREE.MeshStandardMaterial({
+                color: 0x2a3545,
+                roughness: 0.4,
+                metalness: 0.5
+            });
+            var roofGeo = new THREE.BoxGeometry(shed.w + 2, 0.8, shed.d + 2);
+            var roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = shed.h + 0.4;
             roof.castShadow = true;
             group.add(roof);
 
-            // Roller door indicators (front face)
-            var doorCount = Math.max(1, Math.floor(shed.size[2] / 6));
-            var doorW = (shed.size[2] - 2) / doorCount - 1;
-            var doorMat = new THREE.MeshBasicMaterial({ color: 0x111118 });
+            // Roller doors (front)
+            var doorCount = Math.max(1, Math.floor(shed.w / 15));
+            var doorMat = new THREE.MeshBasicMaterial({ color: 0x060810 });
             for (var d = 0; d < doorCount; d++) {
-                var doorGeo = new THREE.PlaneGeometry(doorW, shed.size[1] * 0.65);
+                var dw = (shed.w * 0.7) / doorCount;
+                var doorGeo = new THREE.PlaneGeometry(dw, shed.h * 0.7);
                 var door = new THREE.Mesh(doorGeo, doorMat);
-                var dz = -shed.size[2] / 2 + 1.5 + (doorW + 1) * d + doorW / 2;
-                door.position.set(shed.size[0] / 2 + 0.05, shed.size[1] * 0.35, dz);
-                door.rotation.y = Math.PI / 2;
+                var dx = -shed.w * 0.35 + (d + 0.5) * (shed.w * 0.7 / doorCount);
+                door.position.set(dx, shed.h * 0.38, shed.d / 2 + 0.1);
                 group.add(door);
             }
 
-            group.position.set(shed.position[0], shed.position[1], shed.position[2]);
-            group.rotation.y = shed.rotationY;
-            scene.add(group);
+            // Edge glow (accent)
+            var edgeGeo = new THREE.EdgesGeometry(wallGeo);
+            var edgeMat = new THREE.LineBasicMaterial({ color: 0x038184, transparent: true, opacity: 0.3 });
+            var edges = new THREE.LineSegments(edgeGeo, edgeMat);
+            edges.position.y = shed.h / 2;
+            group.add(edges);
+
+            group.position.set(shed.x - SITE.length / 2, 0, shed.z - SITE.width / 2);
+            facility.add(group);
         });
 
-        // ─── Vegetation (Instanced Trees) ─────────────────────────
-        var treeCount = isMobile ? 40 : SITE_PLAN.vegetation.density;
-        var trunkGeo = new THREE.CylinderGeometry(0.3, 0.5, 4, 5);
-        var canopyGeo = new THREE.ConeGeometry(3, 6, 6);
-        var trunkMat = new THREE.MeshStandardMaterial({ color: 0x3d2a1a, roughness: 0.9 });
-        var canopyMat = new THREE.MeshStandardMaterial({ color: 0x1a3a1a, roughness: 0.85 });
+        // ─── Mining Vehicles (simple block representations) ───────
+        var vehicleColors = {
+            excavator: 0xd4a017,
+            truck: 0xd4a017,
+            dozer: 0xd4a017
+        };
 
-        var vegZone = SITE_PLAN.vegetation.zone;
-        var vegMinX = vegZone[0][0], vegMaxX = vegZone[1][0];
-        var vegMinZ = vegZone[0][1], vegMaxZ = vegZone[2][1];
+        SITE.vehicles.forEach(function(v) {
+            var vGroup = new THREE.Group();
 
-        for (var t = 0; t < treeCount; t++) {
-            var tx = vegMinX + Math.random() * (vegMaxX - vegMinX);
-            var tz = vegMinZ + Math.random() * (vegMaxZ - vegMinZ);
-            var treeScale = 0.6 + Math.random() * 0.8;
-
-            var trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.set(tx, 2 * treeScale, tz);
-            trunk.scale.setScalar(treeScale);
-            trunk.castShadow = !isMobile;
-            scene.add(trunk);
-
-            var canopy = new THREE.Mesh(canopyGeo, canopyMat);
-            canopy.position.set(tx, (4 + 3) * treeScale, tz);
-            canopy.scale.set(treeScale, treeScale * (0.7 + Math.random() * 0.6), treeScale);
-            canopy.castShadow = !isMobile;
-            scene.add(canopy);
-        }
-
-        // ─── Entry Points (small markers) ─────────────────────────
-        var entryMat = new THREE.MeshBasicMaterial({ color: 0x038184 });
-        SITE_PLAN.entries.forEach(function(entry) {
-            var markerGeo = new THREE.CylinderGeometry(2, 2, 1, 8);
-            var marker = new THREE.Mesh(markerGeo, entryMat);
-            marker.position.set(entry.position[0], 0.5, entry.position[1]);
-            scene.add(marker);
-        });
-
-        // ═══════════════════════════════════════════════════════════
-        // STAGE 5 — SCROLL-DRIVEN CAMERA
-        // ═══════════════════════════════════════════════════════════
-
-        // Camera keyframes
-        var camStart = { x: 350, y: 420, z: -120, lookX: 400, lookY: 0, lookZ: 90 };
-        var camMid = { x: 480, y: 250, z: 20, lookX: 520, lookY: 0, lookZ: 100 };
-        var camEnd = { x: 550, y: 150, z: 40, lookX: 550, lookY: 0, lookZ: 100 };
-
-        var camProgress = { p: 0 };
-        var lookTarget = new THREE.Vector3(camStart.lookX, camStart.lookY, camStart.lookZ);
-
-        function lerpCam(a, b, t) {
-            return {
-                x: a.x + (b.x - a.x) * t,
-                y: a.y + (b.y - a.y) * t,
-                z: a.z + (b.z - a.z) * t,
-                lookX: a.lookX + (b.lookX - a.lookX) * t,
-                lookY: a.lookY + (b.lookY - a.lookY) * t,
-                lookZ: a.lookZ + (b.lookZ - a.lookZ) * t
-            };
-        }
-
-        function updateCamera(progress) {
-            var cam;
-            if (progress < 0.5) {
-                var t = progress * 2;
-                cam = lerpCam(camStart, camMid, t);
-            } else {
-                var t2 = (progress - 0.5) * 2;
-                cam = lerpCam(camMid, camEnd, t2);
-            }
-            camera.position.set(cam.x, cam.y, cam.z);
-            lookTarget.set(cam.lookX, cam.lookY, cam.lookZ);
-            camera.lookAt(lookTarget);
-        }
-
-        updateCamera(0);
-
-        // GSAP ScrollTrigger integration
-        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && !isMobile) {
-            ScrollTrigger.create({
-                trigger: '#site-model-section',
-                start: 'top bottom',
-                end: 'bottom top',
-                scrub: 1.5,
-                onUpdate: function(self) {
-                    camProgress.p = self.progress;
+            if (v.type === 'excavator') {
+                // Body
+                var bodyGeo = new THREE.BoxGeometry(8, 4, 5);
+                var bodyMat = new THREE.MeshStandardMaterial({ color: vehicleColors.excavator, roughness: 0.6, metalness: 0.3 });
+                var body = new THREE.Mesh(bodyGeo, bodyMat);
+                body.position.y = 3;
+                body.castShadow = true;
+                vGroup.add(body);
+                // Tracks
+                var trackMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
+                for (var side = -1; side <= 1; side += 2) {
+                    var tGeo = new THREE.BoxGeometry(10, 2, 2);
+                    var track = new THREE.Mesh(tGeo, trackMat);
+                    track.position.set(0, 1, side * 3);
+                    track.castShadow = true;
+                    vGroup.add(track);
                 }
-            });
+                // Cab
+                var cabGeo = new THREE.BoxGeometry(3, 3, 3);
+                var cabMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.3, metalness: 0.5 });
+                var cab = new THREE.Mesh(cabGeo, cabMat);
+                cab.position.set(-1, 6, 0);
+                vGroup.add(cab);
+            } else if (v.type === 'truck') {
+                // Tray
+                var trayGeo = new THREE.BoxGeometry(12, 4, 6);
+                var trayMat = new THREE.MeshStandardMaterial({ color: vehicleColors.truck, roughness: 0.6, metalness: 0.3 });
+                var tray = new THREE.Mesh(trayGeo, trayMat);
+                tray.position.set(2, 4, 0);
+                tray.castShadow = true;
+                vGroup.add(tray);
+                // Cab
+                var tcGeo = new THREE.BoxGeometry(4, 4, 5);
+                var tcMat = new THREE.MeshStandardMaterial({ color: 0x1a1a20, roughness: 0.4, metalness: 0.4 });
+                var tc = new THREE.Mesh(tcGeo, tcMat);
+                tc.position.set(-5, 4, 0);
+                vGroup.add(tc);
+                // Wheels
+                var wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+                var wheelGeo = new THREE.CylinderGeometry(2, 2, 1.5, 8);
+                for (var wx = -4; wx <= 4; wx += 4) {
+                    for (var wz = -1; wz <= 1; wz += 2) {
+                        var wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                        wheel.rotation.x = Math.PI / 2;
+                        wheel.position.set(wx, 2, wz * 3.5);
+                        vGroup.add(wheel);
+                    }
+                }
+            } else { // dozer
+                var dzGeo = new THREE.BoxGeometry(7, 3, 5);
+                var dzMat = new THREE.MeshStandardMaterial({ color: vehicleColors.dozer, roughness: 0.6, metalness: 0.3 });
+                var dz = new THREE.Mesh(dzGeo, dzMat);
+                dz.position.y = 2.5;
+                dz.castShadow = true;
+                vGroup.add(dz);
+                // Blade
+                var bladeGeo = new THREE.BoxGeometry(0.8, 3, 7);
+                var bladeMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.6 });
+                var blade = new THREE.Mesh(bladeGeo, bladeMat);
+                blade.position.set(4.5, 1.5, 0);
+                vGroup.add(blade);
+                // Tracks
+                for (var ds = -1; ds <= 1; ds += 2) {
+                    var dtGeo = new THREE.BoxGeometry(8, 1.8, 1.5);
+                    var dt = new THREE.Mesh(dtGeo, new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 }));
+                    dt.position.set(0, 0.9, ds * 2.5);
+                    vGroup.add(dt);
+                }
+            }
+
+            vGroup.position.set(v.x - SITE.length / 2, 0, v.z - SITE.width / 2);
+            vGroup.rotation.y = v.rot;
+            vGroup.scale.setScalar(0.6);
+            facility.add(vGroup);
+        });
+
+        // ─── Entrances (gate markers) ─────────────────────────────
+        var gateMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.3,
+            metalness: 0.1,
+            emissive: 0x038184,
+            emissiveIntensity: 0.4
+        });
+
+        SITE.entrances.forEach(function(gate) {
+            var gateGroup = new THREE.Group();
+
+            // Gate posts
+            for (var gs = -1; gs <= 1; gs += 2) {
+                var postGeo = new THREE.CylinderGeometry(0.4, 0.4, 6, 8);
+                var post = new THREE.Mesh(postGeo, gateMat);
+                post.position.set(gs * 4, 3, 0);
+                post.castShadow = true;
+                gateGroup.add(post);
+            }
+
+            // Crossbar
+            var barGeo = new THREE.BoxGeometry(9, 0.6, 0.6);
+            var bar = new THREE.Mesh(barGeo, gateMat);
+            bar.position.y = 6;
+            gateGroup.add(bar);
+
+            // Ground marker (glowing ring)
+            var ringGeo = new THREE.RingGeometry(5, 6, 24);
+            var ringMat = new THREE.MeshBasicMaterial({ color: 0x038184, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
+            var ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.2;
+            gateGroup.add(ring);
+
+            gateGroup.position.set(gate.x - SITE.length / 2, 0, gate.z - SITE.width / 2);
+            facility.add(gateGroup);
+        });
+
+        // ─── Glowing Boundary Outline ─────────────────────────────
+        // A slightly elevated cyan perimeter line around the facility zone
+        var bndPts = [
+            new THREE.Vector3(-SITE.length / 2 - 5, 1, -SITE.width / 2 - 5),
+            new THREE.Vector3(SITE.length / 2 + 5, 1, -SITE.width / 2 - 5),
+            new THREE.Vector3(SITE.length / 2 + 5, 1, SITE.width / 2 + 5),
+            new THREE.Vector3(-SITE.length / 2 - 5, 1, SITE.width / 2 + 5),
+            new THREE.Vector3(-SITE.length / 2 - 5, 1, -SITE.width / 2 - 5)
+        ];
+        var bndGeo = new THREE.BufferGeometry().setFromPoints(bndPts);
+        var bndMat = new THREE.LineBasicMaterial({ color: 0x038184, linewidth: 2 });
+        var bndLine = new THREE.Line(bndGeo, bndMat);
+        facility.add(bndLine);
+
+        // Glowing boundary tubes
+        var tubeCurve = new THREE.CatmullRomCurve3(bndPts, false);
+        var tubeGeo = new THREE.TubeGeometry(tubeCurve, 100, 0.6, 4, false);
+        var tubeMat = new THREE.MeshBasicMaterial({ color: 0x038184, transparent: true, opacity: 0.5 });
+        var tube = new THREE.Mesh(tubeGeo, tubeMat);
+        facility.add(tube);
+
+        // ─── Atmosphere Particles ─────────────────────────────────
+        if (!isMobile) {
+            var pCount = 200;
+            var pGeo = new THREE.BufferGeometry();
+            var pPos = new Float32Array(pCount * 3);
+            for (var i = 0; i < pCount; i++) {
+                pPos[i * 3] = (Math.random() - 0.5) * 800;
+                pPos[i * 3 + 1] = Math.random() * 100 + 5;
+                pPos[i * 3 + 2] = (Math.random() - 0.5) * 400;
+            }
+            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+            var pMat = new THREE.PointsMaterial({ color: 0x038184, size: 1.2, transparent: true, opacity: 0.3 });
+            var particles = new THREE.Points(pGeo, pMat);
+            scene.add(particles);
         }
 
         // ═══════════════════════════════════════════════════════════
-        // STAGE 7 — OPTIMISED RENDER LOOP
+        // RENDER LOOP + OPTIMISATION
         // ═══════════════════════════════════════════════════════════
 
         var siteVisible = false;
-        var siteObserver = new IntersectionObserver(function(entries) {
+        var observer = new IntersectionObserver(function(entries) {
             siteVisible = entries[0].isIntersecting;
         }, { rootMargin: '200px' });
-        siteObserver.observe(container);
+        observer.observe(container);
 
-        var siteFrame = 0;
-        function animateSite() {
-            requestAnimationFrame(animateSite);
+        var frame = 0;
+        function animate() {
+            requestAnimationFrame(animate);
             if (!siteVisible) return;
-            siteFrame++;
-            if (isMobile && siteFrame % 2 !== 0) return;
+            frame++;
+            if (isMobile && frame % 2 !== 0) return;
 
-            updateCamera(camProgress.p);
+            if (controls) controls.update();
 
-            // Subtle boundary pulse
-            var pulse = 0.4 + Math.sin(siteFrame * 0.02) * 0.2;
-            tubeMat.opacity = pulse;
+            // Pulse boundary
+            tubeMat.opacity = 0.3 + Math.sin(frame * 0.025) * 0.15;
 
             renderer.render(scene, camera);
         }
-        animateSite();
+        animate();
 
-        // Resize handler
+        // Resize
         window.addEventListener('resize', function() {
             var w = container.clientWidth;
             var h = container.clientHeight;
@@ -505,10 +428,8 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // INIT
+    // BOOT
     // ═══════════════════════════════════════════════════════════════
-
-    buildDebugView();
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initSiteModel);

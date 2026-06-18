@@ -2352,6 +2352,14 @@ a.contact-value:hover {
     height: 75vh;
     min-height: 500px;
     position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: grab;
+    border: 1px solid rgba(3,129,132,0.15);
+    box-shadow: 0 0 60px rgba(3,129,132,0.08), 0 20px 60px rgba(0,0,0,0.4);
+}
+.site-model-canvas:active {
+    cursor: grabbing;
 }
 .site-model-canvas canvas {
     width: 100% !important;
@@ -2360,13 +2368,28 @@ a.contact-value:hover {
 }
 .site-model-overlay {
     position: absolute;
-    bottom: 40px;
-    right: 40px;
+    bottom: 30px;
+    right: 30px;
     display: flex;
     align-items: flex-end;
     gap: 20px;
     pointer-events: none;
     z-index: 5;
+}
+.site-model-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-family: var(--font-body);
+    letter-spacing: 0.5px;
+    opacity: 0.6;
+    animation: hintPulse 3s ease-in-out infinite;
+}
+@keyframes hintPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }
 .site-model-scale {
     display: flex;
@@ -2400,10 +2423,14 @@ a.contact-value:hover {
     .site-model-canvas {
         height: 50vh;
         min-height: 300px;
+        border-radius: 8px;
     }
     .site-model-overlay {
-        bottom: 16px;
-        right: 16px;
-        gap: 12px;
+        bottom: 12px;
+        right: 12px;
+        gap: 10px;
+    }
+    .site-model-hint {
+        display: none;
     }
 }
