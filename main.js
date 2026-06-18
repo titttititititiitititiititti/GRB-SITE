@@ -360,15 +360,15 @@
     keyLight.shadow.camera.bottom = -12;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0x058B94, 0.8);
+    const fillLight = new THREE.DirectionalLight(0x038184, 0.8);
     fillLight.position.set(5, 3, -4);
     scene.add(fillLight);
 
-    const rimLight = new THREE.PointLight(0x058B94, 1.0, 30);
+    const rimLight = new THREE.PointLight(0x038184, 1.0, 30);
     rimLight.position.set(4, 5, -8);
     scene.add(rimLight);
 
-    const underGlow = new THREE.PointLight(0x058B94, 0.5, 12);
+    const underGlow = new THREE.PointLight(0x038184, 0.5, 12);
     underGlow.position.set(0, -1.0, 3);
     scene.add(underGlow);
 
@@ -389,9 +389,9 @@
         trackPad: new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.95, metalness: 0.05, flatShading: true }),
         trackFrame: new THREE.MeshStandardMaterial({ color: 0x3a3a40, roughness: 0.7, metalness: 0.35, flatShading: true }),
         hydraulic: new THREE.MeshStandardMaterial({ color: 0x4a4a52, roughness: 0.5, metalness: 0.5, flatShading: true }),
-        glass: new THREE.MeshStandardMaterial({ color: 0x058B94, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.7, flatShading: true, emissive: 0x058B94, emissiveIntensity: 0.1 }),
+        glass: new THREE.MeshStandardMaterial({ color: 0x038184, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.7, flatShading: true, emissive: 0x038184, emissiveIntensity: 0.1 }),
         light: new THREE.MeshStandardMaterial({ color: 0xffeebb, emissive: 0xffcc55, emissiveIntensity: 0.6, roughness: 0.35, flatShading: true }),
-        accent: new THREE.MeshStandardMaterial({ color: 0x058B94, metalness: 0.6, roughness: 0.25, emissive: 0x058B94, emissiveIntensity: 0.25, flatShading: true }),
+        accent: new THREE.MeshStandardMaterial({ color: 0x038184, metalness: 0.6, roughness: 0.25, emissive: 0x038184, emissiveIntensity: 0.25, flatShading: true }),
         yellow: new THREE.MeshStandardMaterial({ color: 0xd4940f, roughness: 0.68, metalness: 0.15, flatShading: true }),
         counterweight: new THREE.MeshStandardMaterial({ color: 0x3d3d42, roughness: 0.8, metalness: 0.3, flatShading: true }),
         boomDark: new THREE.MeshStandardMaterial({ color: 0x1e1e22, roughness: 0.8, metalness: 0.3, flatShading: true, side: THREE.DoubleSide }),
@@ -869,7 +869,7 @@
             new THREE.DodecahedronGeometry(0.3, 0),
         ];
         const wireMat = new THREE.MeshBasicMaterial({
-            color: 0x058B94,
+            color: 0x038184,
             wireframe: true,
             transparent: true,
             opacity: 0.25,
@@ -903,7 +903,7 @@
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
     const pMat = new THREE.PointsMaterial({
-        color: 0x058B94,
+        color: 0x038184,
         size: 0.04,
         transparent: true,
         opacity: 0.6,
@@ -914,7 +914,7 @@
     // Ground grid
     const gridGeo = new THREE.PlaneGeometry(25, 25, 25, 25);
     const gridMat = new THREE.MeshBasicMaterial({
-        color: 0x058B94,
+        color: 0x038184,
         wireframe: true,
         transparent: true,
         opacity: 0.03,
@@ -1123,6 +1123,20 @@
     }
 
     // Stats counter
+    // Days incident free: base date set so that today = 2000 days
+    var daysFreeBase = new Date();
+    daysFreeBase.setDate(daysFreeBase.getDate() - 2000);
+    var daysFreeEpoch = daysFreeBase.getTime();
+
+    function getDaysFree() {
+        return Math.floor((Date.now() - daysFreeEpoch) / 86400000);
+    }
+
+    var daysFreeEl = document.getElementById('days-free-counter');
+    if (daysFreeEl) {
+        daysFreeEl.setAttribute('data-target', getDaysFree());
+    }
+
     document.querySelectorAll('.stat-number').forEach(function(num) {
         var target = parseInt(num.getAttribute('data-target'));
         ScrollTrigger.create({
@@ -1142,6 +1156,13 @@
             }
         });
     });
+
+    // Update days-free counter at midnight
+    if (daysFreeEl) {
+        setInterval(function() {
+            daysFreeEl.textContent = getDaysFree();
+        }, 60000);
+    }
 
     // Hero canvas fade on scroll
     gsap.to('#hero-canvas-container', {

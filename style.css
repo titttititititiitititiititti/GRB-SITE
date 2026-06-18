@@ -5,11 +5,11 @@
     --color-surface-light: #1a1a28;
     --color-text: #f0f0f5;
     --color-text-muted: #8a8a9a;
-    --color-accent: #058B94;
-    --color-accent-light: #07b0bb;
-    --color-accent-dark: #035D63;
-    --color-accent-glow: rgba(5, 139, 148, 0.2);
-    --color-accent-glow-strong: rgba(5, 139, 148, 0.4);
+    --color-accent: #038184;
+    --color-accent-light: #049a9e;
+    --color-accent-dark: #025a5c;
+    --color-accent-glow: rgba(3, 129, 132, 0.2);
+    --color-accent-glow-strong: rgba(3, 129, 132, 0.4);
     --color-gold: #e8a835;
     --color-gold-dark: #c48a20;
     --color-border: rgba(255, 255, 255, 0.06);
@@ -26,11 +26,11 @@
     --color-surface-light: #f8f8fc;
     --color-text: #1a1a2e;
     --color-text-muted: #5a5a70;
-    --color-accent: #058B94;
-    --color-accent-light: #047a82;
-    --color-accent-dark: #035D63;
-    --color-accent-glow: rgba(5, 139, 148, 0.15);
-    --color-accent-glow-strong: rgba(5, 139, 148, 0.3);
+    --color-accent: #038184;
+    --color-accent-light: #02696c;
+    --color-accent-dark: #025a5c;
+    --color-accent-glow: rgba(3, 129, 132, 0.15);
+    --color-accent-glow-strong: rgba(3, 129, 132, 0.3);
     --color-gold: #c48a20;
     --color-gold-dark: #a06e15;
     --color-border: rgba(0, 0, 0, 0.08);
@@ -468,7 +468,7 @@ a {
 
 .about-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 32px;
     margin-top: 48px;
     padding-top: 48px;
@@ -2234,7 +2234,7 @@ a.contact-value:hover {
     .contact-grid { grid-template-columns: 1fr; gap: 40px; }
     .tech-grid { grid-template-columns: 1fr; gap: 40px; }
     .services-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
-    .about-stats { grid-template-columns: repeat(3, 1fr); }
+    .about-stats { grid-template-columns: repeat(2, 1fr); }
     .nav-inner { padding: 0 40px; }
     .tech-visual { max-width: 300px; }
     .gallery-track { grid-template-columns: repeat(3, 1fr); }

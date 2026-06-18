@@ -203,6 +203,10 @@
                                     <span class="stat-number" data-target="99">0</span><span class="stat-suffix">%</span>
                                     <span class="stat-label">Uptime Target</span>
                                 </div>
+                                <div class="stat-item reveal-up">
+                                    <span class="stat-number" data-target="2000" id="days-free-counter">0</span><span class="stat-suffix"> days</span>
+                                    <span class="stat-label">Incident Free</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -355,68 +359,6 @@
                 </div>
             </section>
 
-            <section class="section facility-timeline-section">
-                <div class="section-particles" data-density="25"></div>
-                <div class="container">
-                    <span class="section-label reveal-up">Testing &amp; Validation</span>
-                    <h2 class="section-title reveal-text">Tested Before It <span class="accent">Reaches Site</span></h2>
-                    <p class="facility-text reveal-text">Before machinery reaches remote sites, it needs to be checked, tested and prepared properly. GRB's facility provides a dedicated regional location for pre-site validation, helping clients identify issues early, reduce risk and improve equipment reliability before machines enter production.</p>
-                    <div class="process-timeline reveal-up">
-                        <div class="timeline-track"></div>
-                        <div class="timeline-step" data-step="1">
-                            <div class="step-number">01</div>
-                            <h3>Receive</h3>
-                            <p>Equipment arrives at the facility for inspection, maintenance or rebuild works.</p>
-                        </div>
-                        <div class="timeline-step" data-step="2">
-                            <div class="step-number">02</div>
-                            <h3>Prepare</h3>
-                            <p>Machinery is serviced, refurbished, repaired or configured for site requirements.</p>
-                        </div>
-                        <div class="timeline-step" data-step="3">
-                            <div class="step-number">03</div>
-                            <h3>Validate</h3>
-                            <p>Equipment is tested and checked before deployment to site.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section facility-transport-section">
-                <div class="section-particles" data-density="20"></div>
-                <div class="container">
-                    <span class="section-label reveal-up">Transport &amp; Staging</span>
-                    <h2 class="section-title reveal-text">Secure Heavy Transport <span class="accent">Staging</span></h2>
-                    <p class="facility-text reveal-text">One of the biggest challenges in transporting machinery over 150 tonnes into remote locations is effective route planning, secure staging and the lack of suitable rest points for heavy transport operators. To support safer and more efficient movement of major equipment, GRB is making part of its facility available as a dedicated lay-down and staging yard.</p>
-                    <p class="facility-text reveal-text">Beginning February 2026, approved suppliers, mine sites and clients transporting large-scale equipment will be able to access the staging area free of charge. The site offers direct Bruce Highway proximity, a secure yard with 24/7 CCTV, and a safe, practical rest and parking area for heavy transport companies.</p>
-                    <div class="transport-route reveal-up">
-                        <div class="route-visual">
-                            <div class="route-node">
-                                <div class="route-dot"></div>
-                                <span>Supplier / Port</span>
-                            </div>
-                            <div class="route-line"></div>
-                            <div class="route-node route-node-center">
-                                <div class="route-dot active"></div>
-                                <span>GRB Staging</span>
-                            </div>
-                            <div class="route-line"></div>
-                            <div class="route-node">
-                                <div class="route-dot"></div>
-                                <span>Mine Site</span>
-                            </div>
-                        </div>
-                        <div class="transport-tabs">
-                            <button class="transport-tab active" data-tab="staging">Secure Staging</button>
-                            <button class="transport-tab" data-tab="rest">Operator Rest Point</button>
-                            <button class="transport-tab" data-tab="route">Route Efficiency</button>
-                        </div>
-                        <div class="transport-detail" id="transport-detail">
-                            <p id="transport-desc">A fully monitored yard with 24/7 CCTV for approved heavy equipment movements.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             <section class="section facility-stats-section">
                 <div class="container">
@@ -470,9 +412,9 @@
                                     <div class="team-photo-placeholder">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
                                     </div>
-                                    <h3 class="team-name">Jess Conway</h3>
-                                    <span class="team-role">Ultra-Class Tyre Management Lead</span>
-                                    <p class="team-bio">Over 15 years of frontline experience across large-scale mining operations. Highly regarded for technical depth in tyre performance, fitment, lifecycle management, procurement and strategic budgeting.</p>
+                                    <h3 class="team-name">Anne Ross</h3>
+                                    <span class="team-role">Accounts Manager</span>
+                                    <p class="team-bio">The driving force behind GRB's business management and accounting functions. Brings precision, commercial focus and a high-performance mindset to core operations, navigating complex financial structures with transparency.</p>
                                 </div>
                             </div>
                             <div class="team-card" data-index="2">
@@ -503,9 +445,9 @@
                                     <div class="team-photo-placeholder">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
                                     </div>
-                                    <h3 class="team-name">Anne Ross</h3>
-                                    <span class="team-role">Accounts Manager</span>
-                                    <p class="team-bio">The driving force behind GRB's business management and accounting functions. Brings precision, commercial focus and a high-performance mindset to core operations, navigating complex financial structures with transparency.</p>
+                                    <h3 class="team-name">Sean Braam</h3>
+                                    <span class="team-role">Superintendent, Major Works</span>
+                                    <p class="team-bio">Leading GRB's rebuild facility operations with deep expertise in drill systems and heavy equipment programs. Sean oversees large-scale machinery rebuilds, ensuring every asset meets site-readiness standards before deployment.</p>
                                 </div>
                             </div>
                             <div class="team-card" data-index="5">
@@ -514,9 +456,31 @@
                                     <div class="team-photo-placeholder">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
                                     </div>
-                                    <h3 class="team-name">Sean Braam</h3>
-                                    <span class="team-role">Superintendent, Major Works</span>
-                                    <p class="team-bio">Leading GRB's rebuild facility operations with deep expertise in drill systems and heavy equipment programs. Sean oversees large-scale machinery rebuilds, ensuring every asset meets site-readiness standards before deployment.</p>
+                                    <h3 class="team-name">Carlos Velas</h3>
+                                    <span class="team-role">Strategic Readiness</span>
+                                    <p class="team-bio">Bridges strategy, operations and execution to ensure projects are prepared for delivery at scale. Supports mobilisation planning, operational readiness and field coordination across major mining and technology-driven equipment programs.</p>
+                                </div>
+                            </div>
+                            <div class="team-card" data-index="6">
+                                <div class="card-inner">
+                                    <div class="card-glow"></div>
+                                    <div class="team-photo-placeholder">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                                    </div>
+                                    <h3 class="team-name">Bailey Amouyal</h3>
+                                    <span class="team-role">Shutdown Planner</span>
+                                    <p class="team-bio">Coordinates shutdown planning across heavy mining equipment and site operations, supporting the preparation of labour, parts, access, timing and task flow. Focused on reducing downtime, improving execution clarity and keeping critical works on schedule.</p>
+                                </div>
+                            </div>
+                            <div class="team-card" data-index="7">
+                                <div class="card-inner">
+                                    <div class="card-glow"></div>
+                                    <div class="team-photo-placeholder">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                                    </div>
+                                    <h3 class="team-name">Jess Conway</h3>
+                                    <span class="team-role">Ultra-Class Tyre Management Lead</span>
+                                    <p class="team-bio">Over 15 years of frontline experience across large-scale mining operations. Highly regarded for technical depth in tyre performance, fitment, lifecycle management, procurement and strategic budgeting.</p>
                                 </div>
                             </div>
                         </div>
