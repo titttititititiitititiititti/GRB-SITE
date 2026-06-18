@@ -2334,3 +2334,76 @@ a.contact-value:hover {
     .minestar-btn { padding: 8px 12px; font-size: 0.72rem; }
     .team-card { min-width: 220px; max-width: 220px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Site Model Section
+═══════════════════════════════════════════════════════════ */
+.site-model-section {
+    position: relative;
+    padding-top: 80px;
+    padding-bottom: 0;
+    overflow: hidden;
+}
+.site-model-header {
+    margin-bottom: 40px;
+}
+.site-model-canvas {
+    width: 100%;
+    height: 75vh;
+    min-height: 500px;
+    position: relative;
+}
+.site-model-canvas canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+.site-model-overlay {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    pointer-events: none;
+    z-index: 5;
+}
+.site-model-scale {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-family: var(--font-body);
+    letter-spacing: 0.5px;
+}
+.scale-bar {
+    width: 80px;
+    height: 2px;
+    background: var(--color-accent);
+    position: relative;
+}
+.scale-bar::before, .scale-bar::after {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 8px;
+    top: -3px;
+    background: var(--color-accent);
+}
+.scale-bar::before { left: 0; }
+.scale-bar::after { right: 0; }
+.site-model-compass {
+    opacity: 0.7;
+}
+@media (max-width: 768px) {
+    .site-model-canvas {
+        height: 50vh;
+        min-height: 300px;
+    }
+    .site-model-overlay {
+        bottom: 16px;
+        right: 16px;
+        gap: 12px;
+    }
+}
