@@ -43,35 +43,36 @@
     var SITE = {
         // Sheds (blue in layout.png)
         sheds: [
-            { name: 'Storage Shed', pctX: 0.50, pctZ: 0.62, w: 14, d: 14, h: 6 },
-            { name: 'Main Workshop', pctX: 0.56, pctZ: 0.67, w: 70, d: 16, h: 14 },
-            { name: 'Equipment Bay', pctX: 0.64, pctZ: 0.60, w: 16, d: 50, h: 12 }
+            { name: 'Storage Shed', pctX: 0.50, pctZ: 0.58, w: 14, d: 14, h: 6 },
+            { name: 'Main Workshop', pctX: 0.56, pctZ: 0.62, w: 70, d: 16, h: 14 },
+            { name: 'Equipment Bay', pctX: 0.64, pctZ: 0.55, w: 16, d: 50, h: 12 }
         ],
 
         // Hardstand areas (red in layout.png) - flat concrete
         hardstands: [
-            { name: 'Laydown Yard', pctX: 0.47, pctZ: 0.55, w: 80, d: 80 },
-            { name: 'Staging Area', pctX: 0.61, pctZ: 0.63, w: 100, d: 80 }
+            { name: 'Laydown Yard', pctX: 0.47, pctZ: 0.52, w: 80, d: 80 },
+            { name: 'Staging Area', pctX: 0.61, pctZ: 0.58, w: 100, d: 80 }
         ],
 
         // Entrances (white squares in layout.png)
-        // Main Gate: on the road/boundary line (further from cluster)
-        // Service Entry: between the hardstand areas
+        // Both sit ON the cyan boundary line
+        // Main Gate: on the NE boundary (far from highway), left portion
+        // Service Entry: on the NE boundary, center-right portion
         entrances: [
-            { name: 'Main Gate', pctX: 0.38, pctZ: 0.48 },
-            { name: 'Service Entry', pctX: 0.55, pctZ: 0.52 }
+            { name: 'Main Gate', pctX: 0.34, pctZ: 0.26 },
+            { name: 'Service Entry', pctX: 0.54, pctZ: 0.22 }
         ],
 
         // Mining vehicles on the hardstands
         vehicles: [
-            { type: 'excavator', pctX: 0.44, pctZ: 0.53 },
-            { type: 'truck', pctX: 0.46, pctZ: 0.57 },
-            { type: 'truck', pctX: 0.49, pctZ: 0.55 },
-            { type: 'dozer', pctX: 0.42, pctZ: 0.56 },
-            { type: 'excavator', pctX: 0.59, pctZ: 0.61 },
-            { type: 'truck', pctX: 0.63, pctZ: 0.58 },
-            { type: 'dozer', pctX: 0.57, pctZ: 0.65 },
-            { type: 'truck', pctX: 0.65, pctZ: 0.65 }
+            { type: 'excavator', pctX: 0.44, pctZ: 0.50 },
+            { type: 'truck', pctX: 0.46, pctZ: 0.54 },
+            { type: 'truck', pctX: 0.49, pctZ: 0.52 },
+            { type: 'dozer', pctX: 0.42, pctZ: 0.53 },
+            { type: 'excavator', pctX: 0.59, pctZ: 0.56 },
+            { type: 'truck', pctX: 0.63, pctZ: 0.53 },
+            { type: 'dozer', pctX: 0.57, pctZ: 0.60 },
+            { type: 'truck', pctX: 0.65, pctZ: 0.60 }
         ]
     };
 
