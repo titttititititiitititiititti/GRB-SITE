@@ -32,7 +32,7 @@
         };
     }
 
-    var PROP_ANGLE = -0.22;
+    var PROP_ANGLE = -0.12;
 
     // ═══════════════════════════════════════════════════════════════
     // FACILITY ELEMENTS — positions mapped from layout.png
