@@ -32,7 +32,7 @@
         };
     }
 
-    var PROP_ANGLE = -0.30;
+    var PROP_ANGLE = -0.07;
 
     // ═══════════════════════════════════════════════════════════════
     // FACILITY ELEMENTS — positions mapped from layout.png
@@ -53,10 +53,10 @@
             { name: 'Staging Area', pctX: 0.60, pctZ: 0.66, w: 100, d: 80 }
         ],
 
-        // Entrances on the boundary line
+        // Entrances ON the upper blue line (highway boundary)
         entrances: [
-            { name: 'Main Gate', pctX: 0.38, pctZ: 0.44 },
-            { name: 'Service Entry', pctX: 0.52, pctZ: 0.52 }
+            { name: 'Main Gate', pctX: 0.38, pctZ: 0.36 },
+            { name: 'Service Entry', pctX: 0.52, pctZ: 0.36 }
         ],
 
         // Mining vehicles on the hardstands
