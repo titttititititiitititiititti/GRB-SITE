@@ -26,10 +26,10 @@
 
     // Current positions & rotation — these are what you're adjusting
     var STATE = {
-        cluster1: { pctX: 0.49, pctZ: 0.60, angle: -0.30 },
-        cluster2: { pctX: 0.60, pctZ: 0.66, angle: -0.30 },
-        entrance1: { pctX: 0.38, pctZ: 0.36, angle: -0.30 },
-        entrance2: { pctX: 0.52, pctZ: 0.36, angle: -0.30 }
+        cluster1: { pctX: 0.504, pctZ: 0.661, angle: -0.8056 },
+        cluster2: { pctX: 0.648, pctZ: 0.746, angle: -0.7611 },
+        entrance1: { pctX: 0.622, pctZ: 0.567, angle: -0.6000 },
+        entrance2: { pctX: 0.491, pctZ: 0.363, angle: -0.5056 }
     };
 
     function initSiteModel() {
@@ -215,14 +215,14 @@
         // --- CLUSTER 2: Right hardstand + workshop + equipment bay + 4 vehicles ---
         var cluster2 = new THREE.Group();
         cluster2.userData = { id: 'cluster2', label: 'Right Cluster (Staging + Workshop + Equipment Bay)' };
-        var hs2 = new THREE.Mesh(new THREE.BoxGeometry(100, 0.4, 80), concreteMat);
+        var hs2 = new THREE.Mesh(new THREE.BoxGeometry(120, 0.4, 110), concreteMat);
         hs2.position.y = 0.2;
         cluster2.add(hs2);
         var workshop = buildShed(70, 16, 14);
-        workshop.position.set(0, 0, -20);
+        workshop.position.set(0, 0, -30);
         cluster2.add(workshop);
         var eqBay = buildShed(16, 50, 12);
-        eqBay.position.set(30, 0, 5);
+        eqBay.position.set(25, 0, 30);
         cluster2.add(eqBay);
         var v2Offsets = [[-20, 15], [0, 20], [-15, 25], [15, 20]];
         var v2Types = ['excavator', 'truck', 'dozer', 'truck'];
