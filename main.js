@@ -1290,7 +1290,7 @@
         });
     });
 
-    // Enquiry form (FormSubmit.co) — always AJAX, never redirects
+    // Enquiry form — posts to the GRB app (app.grbmining.com.au/api/enquiry), which emails it via Resend. Always AJAX, never redirects
     var enquiryForm = document.getElementById('enquiry-form');
     var formStatus = document.getElementById('form-status');
     var lastSubmitTime = 0;
